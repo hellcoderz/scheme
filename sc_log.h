@@ -1,8 +1,7 @@
 #ifndef _SC_LOG_H_
 #define _SC_LOG_H_
 
-// Undefine this line to turn off logging
-#define DEBUG_LOG
+#include "sc_config.h"
 
 void _sc_log(char *msg);
 

@@ -53,7 +53,7 @@ static object* parse_fixnum(FILE *in, long sign) {
     } else {
         p = NULL;
         fprintf(stderr, 
-                "fixnum not followed by delimiter(%c)\n", c);
+                "fixnum not followed by delimiter `%c\n", c);
     }
     return p;
 }

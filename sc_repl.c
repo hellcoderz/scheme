@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "sc_config.h"
 #include "sc_object.h"
 #include "sc_reader.h"
 #include "sc_print.h"
@@ -34,5 +35,7 @@ int sc_repl(void) {
             break;
         }
     }
+
+    return ret;
 }
 

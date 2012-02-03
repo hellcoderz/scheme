@@ -1,4 +1,4 @@
-#include "sc_object"
+#include "sc_object.h"
 #include "sc_mem.h"
 
 object* make_fixnum(long value) {
@@ -10,7 +10,7 @@ object* make_fixnum(long value) {
     return obj;
 }
 
-bool is_fixnum(object *obj) {
+int is_fixnum(object *obj) {
     return obj->type == FIXNUM;
 }
 

@@ -7,7 +7,7 @@ int sc_write(object *val) {
 
     switch (val->type) {
         case FIXNUM:
-            printf("%ld", obj->data.fixnum.value);
+            printf("%ld", val->data.fixnum.value);
             break;
         default:
             fprintf(stderr,

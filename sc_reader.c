@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "sc_object.h"
 #include "sc_mem.h"
 #include "sc_reader.h"
 #include "sc_log.h"
 
-static bool is_delimiter(int c) {
+static int is_delimiter(int c) {
     return isspace(c) || c == EOF ||
            c == '(' || c == ')' ||
            c == '"' || c == ';';
@@ -15,7 +16,7 @@ static int peek(FILE *in) {
     int c;
 
     c = getc(in);
-    unget(c, in);
+    ungetc(c, in);
     return c;
 }
 
@@ -26,7 +27,7 @@ static void skip_whitespace(FILE *in) {
         if (isspace(c)) {
             continue;
         } else if (c == ';') {
-            // Skip line comment
+            /* Skip line comment */
             while (((c = getc(in)) != EOF) && (c != '\n'));
             continue;
         }
@@ -57,9 +58,9 @@ static object* parse_fixnum(FILE *in, long sign) {
     return p;
 }
 
-static bool is_fixnum(int first, int second) {
-    return (isdigit(first) ||
-           ((first == '-' || first == '+') && isdigit(second)));
+static int is_fixnum_start(int c, int ahead) {
+    return (isdigit(c) ||
+           ((c == '-' || c == '+') && isdigit(ahead)));
 }
 
 object* sc_read(FILE *in) {
@@ -69,7 +70,7 @@ object* sc_read(FILE *in) {
     skip_whitespace(in);
 
     c = getc(in);
-    if (is_fixnum(c, peek(in))) {
+    if (is_fixnum_start(c, peek(in))) {
         long sign = 1;
 
         if (c == '-') {

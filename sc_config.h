@@ -7,7 +7,7 @@
 
 #define PROMPT "> "
 
-// Undefine this line to turn off logging
+/* Undefine this line to turn off logging */
 #define DEBUG_LOG
 
 #endif

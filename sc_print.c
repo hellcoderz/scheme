@@ -12,7 +12,7 @@ int sc_write(object *val) {
     }
 
     if (is_fixnum(val)) {
-        printf("%ld", val->data.fixnum.value);
+        printf("%ld", obj_n(val).value);
     } else if (is_boolean(val)) {
         char v = is_true(val) ? 't' : 'f';
         printf("#%c", v);

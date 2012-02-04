@@ -5,11 +5,8 @@
 
 #define INIT_BOOLEAN(p, v) \
     p = alloc_object(); \
-    if (p == NULL) { \
-        return 0; \
-    } \
-    p->data.boolean.value = v; \
-    p->type = BOOLEAN;
+    obj_b(p).value = v; \
+    type(p) = BOOLEAN;
 
 object *g_true_val;
 object *g_false_val;
@@ -36,7 +33,7 @@ int is_boolean(object *obj) {
         return 0;
     }
 
-    return obj->type == BOOLEAN;
+    return type(obj) == BOOLEAN;
 }
 
 int is_true(object *obj) {

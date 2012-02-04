@@ -5,8 +5,8 @@ object* make_fixnum(long value) {
     object *obj;
 
     obj = alloc_object();
-    obj->type = FIXNUM;
-    obj->data.fixnum.value = value;
+    type(obj) = FIXNUM;
+    obj_n(obj).value = value;
     return obj;
 }
 
@@ -15,6 +15,6 @@ int is_fixnum(object *obj) {
         return 0;
     }
 
-    return obj->type == FIXNUM;
+    return type(obj) == FIXNUM;
 }
 

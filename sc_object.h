@@ -4,11 +4,15 @@
 typedef enum {
 	FIXNUM,
     BOOLEAN,
+    CHARACTER,
 } object_type;
 
 typedef struct object {
     object_type type;
     union {
+        struct {
+            char value;
+        } character;
         struct {
             char value;
         } boolean;
@@ -17,6 +21,11 @@ typedef struct object {
         } fixnum;
     } data;
 } object;
+
+#define type(p) (p->type)
+#define obj_c(p) (p->data.character)
+#define obj_b(p) (p->data.boolean)
+#define obj_n(p) (p->data.fixnum)
 
 extern object *g_true_val;
 extern object *g_false_val;

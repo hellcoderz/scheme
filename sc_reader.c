@@ -66,6 +66,85 @@ static int is_boolean_start(int c, int ahead) {
     return c == '#' && (ahead == 't' || ahead == 'f'); 
 }
 
+static int is_character_start(int c, int ahead) {
+    return c == '#' && ahead == '\\';
+}
+
+static object* try_character(FILE *in, char *name, char val) {
+    char *s = name + 1;
+
+    while (*s != '\0' && peek(in) == *s) {
+        s++;
+        getc(in);
+    }
+    if (*s == '\0' && is_delimiter(peek(in))) {
+        return make_character(val);
+    }
+
+    return NULL;
+}
+
+static object* parse_character(FILE *in) {
+    int c, ahead;
+    object *obj = NULL;
+
+    c = getc(in);
+    ahead = peek(in);
+    switch (c) {
+        case EOF:
+            fprintf(stderr, "%s", "incomplete character literal\n");
+            break;
+        case LINEFEED:
+        case TAB:
+        case SPACE:
+        case RETURN:
+            fprintf(stderr, "%s", "spaces are not allowed in character literal\n");
+            break;
+
+        case 'n':
+            if (ahead == 'u') {
+                obj = try_character(in, "nul", NUL);
+            } else if (ahead == 'e') {
+                obj = try_character(in, "newline", NEWLINE);
+            }
+            break;
+
+        case 't':
+            if (ahead == 'a') {
+                obj = try_character(in, "tab", TAB);
+            }
+            break;
+
+        case 'l':
+            if (ahead == 'i') {
+                obj = try_character(in, "linefeed", LINEFEED);
+            }
+            break;
+
+        case 'r':
+            if (ahead == 'e') {
+                obj = try_character(in, "return", RETURN);
+            }
+            break;
+
+        case 's':
+            if (ahead == 'p') {
+                obj = try_character(in, "space", SPACE);
+            }
+            break;
+    }
+
+    if (obj == NULL && is_delimiter(ahead) && !isspace(c)) {
+        obj = make_character(c);
+    }
+
+    if (obj == NULL && !isspace(c)) {
+        fprintf(stderr, "bad character literal `%c\n", ahead);
+    }
+
+    return obj;
+}
+
 object* sc_read(FILE *in) {
     int c;
     object *obj;
@@ -88,8 +167,11 @@ object* sc_read(FILE *in) {
 
         v = getc(in);
         obj = make_boolean(v);
+    } else if(is_character_start(c, peek(in))) {
+        getc(in);
+        obj = parse_character(in);
     } else {
-        fprintf(stderr, "bad input, unexpected `%c\n", c);
+        fprintf(stderr, "bad input, at `%c\n", c);
         obj = NULL;
     }
 

@@ -15,6 +15,8 @@ object* sc_eval(object *exp) {
         val = exp;
     } else if (is_boolean(exp)) {
         val = exp;
+    } else if (is_character(exp)) {
+        val = exp;
     } else {
         val = NULL;
         fprintf(stderr,

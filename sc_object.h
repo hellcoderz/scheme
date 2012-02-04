@@ -1,6 +1,13 @@
 #ifndef _SC_OBJECT_H_
 #define _SC_OBJECT_H_
 
+#define NUL '\0'
+#define TAB '\t'
+#define LINEFEED '\n'
+#define NEWLINE '\n'
+#define RETURN '\r'
+#define SPACE ' '
+
 typedef enum {
 	FIXNUM,
     BOOLEAN,
@@ -23,9 +30,9 @@ typedef struct object {
 } object;
 
 #define type(p) (p->type)
-#define obj_c(p) (p->data.character)
-#define obj_b(p) (p->data.boolean)
-#define obj_n(p) (p->data.fixnum)
+#define obj_cv(p) (p->data.character.value)
+#define obj_bv(p) (p->data.boolean.value)
+#define obj_nv(p) (p->data.fixnum.value)
 
 extern object *g_true_val;
 extern object *g_false_val;
@@ -40,6 +47,9 @@ int boolean_init(void);
 int is_boolean(object *obj);
 int is_true(object *obj);
 int is_false(object *obj);
+
+object* make_character(int val);
+int is_character(object *obj);
 
 #endif
 

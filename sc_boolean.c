@@ -5,7 +5,7 @@
 
 #define INIT_BOOLEAN(p, v) \
     p = alloc_object(); \
-    obj_b(p).value = v; \
+    obj_bv(p) = v; \
     type(p) = BOOLEAN;
 
 object *g_true_val;

@@ -6,7 +6,7 @@ object* make_fixnum(long value) {
 
     obj = alloc_object();
     type(obj) = FIXNUM;
-    obj_n(obj).value = value;
+    obj_nv(obj) = value;
     return obj;
 }
 

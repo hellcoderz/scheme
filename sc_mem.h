@@ -11,8 +11,6 @@ void* sc_realloc(void *ptr, size_t size);
 
 /* Object related functions */
 object* alloc_object(void);
-object* make_fixnum(long value);
-int is_fixnum(object *obj);
 
 #endif
 

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "sc_object.h"
-#include "sc_mem.h"
 #include "sc_reader.h"
 #include "sc_log.h"
 
@@ -63,6 +62,10 @@ static int is_fixnum_start(int c, int ahead) {
            ((c == '-' || c == '+') && isdigit(ahead)));
 }
 
+static int is_boolean_start(int c, int ahead) {
+    return c == '#' && (ahead == 't' || ahead == 'f'); 
+}
+
 object* sc_read(FILE *in) {
     int c;
     object *obj;
@@ -80,10 +83,16 @@ object* sc_read(FILE *in) {
             ungetc(c, in);
         }
         obj = parse_fixnum(in, sign);
+    } else if (is_boolean_start(c, peek(in))) {
+        int v;
+
+        v = getc(in);
+        obj = make_boolean(v);
     } else {
         fprintf(stderr, "bad input, unexpected `%c\n", c);
         obj = NULL;
     }
+
     return obj;
 }
 

@@ -66,6 +66,20 @@ static int is_boolean_start(int c, int ahead) {
     return c == '#' && (ahead == 't' || ahead == 'f'); 
 }
 
+static object* parse_boolean(int v, FILE *in) {
+    int c;
+    object *obj = NULL;
+
+    c = peek(in);
+    if (is_delimiter(c)) {
+        obj = make_boolean(v);
+    } else {
+        fprintf(stderr, "unexpected `%c\n", c);
+    }
+    
+    return obj;
+}
+
 static int is_character_start(int c, int ahead) {
     return c == '#' && ahead == '\\';
 }
@@ -84,12 +98,9 @@ static object* try_character(FILE *in, char *name, char val) {
     return NULL;
 }
 
-static object* parse_character(FILE *in) {
-    int c, ahead;
+static object* try_parse_character(int c, int ahead, FILE *in) {
     object *obj = NULL;
 
-    c = getc(in);
-    ahead = peek(in);
     switch (c) {
         case EOF:
             fprintf(stderr, "%s", "incomplete character literal\n");
@@ -133,6 +144,16 @@ static object* parse_character(FILE *in) {
             }
             break;
     }
+    return obj;
+}
+
+static object* parse_character(FILE *in) {
+    int c, ahead;
+    object *obj; 
+
+    c = getc(in);
+    ahead = peek(in);
+    obj = try_parse_character(c, ahead, in);
 
     if (obj == NULL && is_delimiter(ahead) && !isspace(c)) {
         obj = make_character(c);
@@ -166,7 +187,7 @@ object* sc_read(FILE *in) {
         int v;
 
         v = getc(in);
-        obj = make_boolean(v);
+        obj = parse_boolean(v, in);
     } else if(is_character_start(c, peek(in))) {
         getc(in);
         obj = parse_character(in);

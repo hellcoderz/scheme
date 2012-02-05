@@ -42,6 +42,50 @@ static int write_character(object *val) {
     return 0;
 }
 
+static int write_string(object *val) {
+    char *str = obj_sv(val);
+
+    fputc('"', stdout);
+    while (*str != '\0') {
+       switch (*str) {
+           case '\a':
+               printf("%s", "\\a");
+               break;
+           case '\b':
+               printf("%s", "\\b");
+               break;
+           case '\t':
+               printf("%s", "\\t");
+               break;
+           case '\n':
+               printf("%s", "\\n");
+               break;
+           case '\v':
+               printf("%s", "\\v");
+               break;
+           case '\f':
+               printf("%s", "\\f");
+               break;
+           case '\r':
+               printf("%s", "\\r");
+               break;
+           case '"':
+               printf("%s", "\\\"");
+               break;
+           case '\\':
+               printf("%s", "\\\\");
+               break;
+           default:
+               fputc(*str, stdout);
+               break;
+       }
+       str++;
+    }
+    fputc('"', stdout);
+
+    return 0;
+}
+
 int sc_write(object *val) {
     int ret = 0;
 
@@ -57,6 +101,8 @@ int sc_write(object *val) {
         printf("#%c", v);
     } else if (is_character(val)) {
         ret = write_character(val);
+    } else if (is_string(val)) {
+        ret = write_string(val);
     } else {
         fprintf(stderr,
                 "unknown type, cannot print\n");

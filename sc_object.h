@@ -12,6 +12,7 @@ typedef enum {
 	FIXNUM,
     BOOLEAN,
     CHARACTER,
+    STRING,
 } object_type;
 
 typedef struct object {
@@ -26,6 +27,9 @@ typedef struct object {
         struct {
             long value;
         } fixnum;
+        struct {
+            char *buf;
+        } string;
     } data;
 } object;
 
@@ -33,6 +37,7 @@ typedef struct object {
 #define obj_cv(p) (p->data.character.value)
 #define obj_bv(p) (p->data.boolean.value)
 #define obj_nv(p) (p->data.fixnum.value)
+#define obj_sv(p) (p->data.string.buf)
 
 extern object *g_true_val;
 extern object *g_false_val;
@@ -50,6 +55,9 @@ int is_false(object *obj);
 
 object* make_character(int val);
 int is_character(object *obj);
+
+object* make_string(char *str);
+int is_string(object *obj);
 
 #endif
 

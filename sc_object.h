@@ -13,6 +13,8 @@ typedef enum {
     BOOLEAN,
     CHARACTER,
     STRING,
+    THE_EMPTY_LIST,
+    PAIR,
 } object_type;
 
 typedef struct object {
@@ -30,6 +32,10 @@ typedef struct object {
         struct {
             char *buf;
         } string;
+        struct {
+            struct object *car;
+            struct object *cdr;
+        } pair;
     } data;
 } object;
 
@@ -38,9 +44,11 @@ typedef struct object {
 #define obj_bv(p) (p->data.boolean.value)
 #define obj_nv(p) (p->data.fixnum.value)
 #define obj_sv(p) (p->data.string.buf)
+#define obj_pv(p) (p->data.pair)
 
 extern object *g_true_val;
 extern object *g_false_val;
+extern object *g_the_empty_list;
 
 int init_obj(void);
 
@@ -58,6 +66,17 @@ int is_character(object *obj);
 
 object* make_string(char *str);
 int is_string(object *obj);
+
+object* make_empty_list();
+int is_empty_list(object *obj);
+int empty_list_init();
+
+int is_pair(object *obj);
+object* cons(object *car, object *cdr);
+object* car(object *pair);
+object* cdr(object *pair);
+int set_car(object *pair, object *car);
+int set_cdr(object *pair, object *cdr);
 
 #endif
 

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "sc_object.h"
+#include "sc_mem.h"
 #include "sc_reader.h"
 #include "sc_log.h"
 #include "sc_sstream.h"
@@ -251,6 +252,7 @@ static object* parse_string(FILE *in) {
             }
             sstream_dispose(stream);
             obj = make_string(str);
+            sc_free(str);
             break;
         } else if (c == '\\') {
             char x;
@@ -278,6 +280,63 @@ static object* parse_string(FILE *in) {
     return obj;
 }
 
+static int is_list_start(int c) {
+    return c == '(';
+}
+
+static object* parse_list(FILE *in) {
+    int c;
+    object *car_obj, *cdr_obj;
+
+    skip_whitespace(in);
+    c = peek(in);
+    if (c == ')') {
+        getc(in);
+        return make_empty_list();
+    }
+
+    car_obj = sc_read(in);
+    if (car_obj == NULL) {
+        return NULL;
+    }
+
+    skip_whitespace(in);
+    c = peek(in);
+    if (c == '.') {
+        /* improper list */
+        getc(in);
+        c = peek(in);
+        if (!is_delimiter(c)) {
+            fprintf(stderr, "%s `%c\n",
+                    "dot not followed by delimiter", c);
+            return NULL;
+        }
+
+        cdr_obj = sc_read(in);
+        if (cdr_obj == NULL) {
+            return NULL;
+        }
+        skip_whitespace(in);
+        c = getc(in);
+        if (c != ')') {
+            fprintf(stderr, "%s `%c\n",
+                    "missing close parentheses", c);
+            return NULL;
+        }
+        return cons(car_obj, cdr_obj);
+    } else {
+        /* proper list */
+        cdr_obj = parse_list(in);
+        if (cdr_obj == NULL) {
+            return NULL;
+        }
+        return cons(car_obj, cdr_obj);
+    }
+
+    /* should never get here */
+    return NULL;
+}
+
 object* sc_read(FILE *in) {
     int c;
     object *obj;
@@ -302,6 +361,8 @@ object* sc_read(FILE *in) {
         obj = parse_character(in);
     } else if (is_string_start(c)) {
         obj = parse_string(in);
+    } else if (is_list_start(c)) {
+        obj = parse_list(in);
     } else {
         fprintf(stderr, "bad input, at `%c\n", c);
         obj = NULL;

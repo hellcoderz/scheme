@@ -48,6 +48,6 @@ int boolean_init(void) {
     INIT_BOOLEAN(g_true_val, 1);
     INIT_BOOLEAN(g_false_val, 0);
 
-    return 1;
+    return 0;
 }
 

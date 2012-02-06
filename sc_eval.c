@@ -19,6 +19,10 @@ object* sc_eval(object *exp) {
         val = exp;
     } else if (is_string(exp)) {
         val = exp;
+    } else if (is_empty_list(exp)) {
+        val = exp;
+    } else if (is_pair(exp)) {
+        val = exp;
     } else {
         val = NULL;
         fprintf(stderr,

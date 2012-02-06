@@ -86,6 +86,25 @@ static int write_string(object *val) {
     return 0;
 }
 
+static int write_pair(object *val) {
+    object *car_obj, *cdr_obj;
+
+    car_obj = car(val);
+    cdr_obj = cdr(val);
+
+    sc_write(car_obj);
+    if (is_pair(cdr_obj)) {
+        printf(" ");
+        write_pair(cdr_obj);
+    } else if (is_empty_list(cdr_obj)) {
+        return 0;
+    } else {
+        printf(" . ");
+        sc_write(cdr_obj);
+    }
+    return 0;
+}
+
 int sc_write(object *val) {
     int ret = 0;
 
@@ -103,6 +122,12 @@ int sc_write(object *val) {
         ret = write_character(val);
     } else if (is_string(val)) {
         ret = write_string(val);
+    } else if (is_empty_list(val)) {
+        printf("%s", "()");
+    } else if (is_pair(val)) {
+        printf("(");
+        ret = write_pair(val);
+        printf(")");
     } else {
         fprintf(stderr,
                 "unknown type, cannot print\n");

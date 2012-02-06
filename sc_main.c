@@ -4,7 +4,7 @@
 #include "sc_repl.h"
 
 int main(int argc, char **argv) {
-    if (!init_obj()) {
+    if (init_obj() != 0) {
        return -1;
     }
 

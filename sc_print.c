@@ -128,6 +128,8 @@ int sc_write(object *val) {
         printf("(");
         ret = write_pair(val);
         printf(")");
+    } else if (is_symbol(val)) {
+        printf("%s", obj_iv(val));
     } else {
         fprintf(stderr,
                 "unknown type, cannot print\n");

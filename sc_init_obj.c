@@ -9,6 +9,11 @@ int init_obj(void) {
     }
 
     ret = empty_list_init();
+    if (ret != 0) {
+        return ret;
+    }
+
+    ret = symbol_init();
     return ret;
 }
 

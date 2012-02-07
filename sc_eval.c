@@ -23,6 +23,8 @@ object* sc_eval(object *exp) {
         val = exp;
     } else if (is_pair(exp)) {
         val = exp;
+    } else if (is_symbol(exp)) {
+        val = exp;
     } else {
         val = NULL;
         fprintf(stderr,

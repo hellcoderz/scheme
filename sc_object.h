@@ -15,6 +15,7 @@ typedef enum {
     STRING,
     THE_EMPTY_LIST,
     PAIR,
+    SYMBOL,
 } object_type;
 
 typedef struct object {
@@ -36,6 +37,9 @@ typedef struct object {
             struct object *car;
             struct object *cdr;
         } pair;
+        struct {
+            char *value;
+        } symbol;
     } data;
 } object;
 
@@ -45,10 +49,7 @@ typedef struct object {
 #define obj_nv(p) (p->data.fixnum.value)
 #define obj_sv(p) (p->data.string.buf)
 #define obj_pv(p) (p->data.pair)
-
-extern object *g_true_val;
-extern object *g_false_val;
-extern object *g_the_empty_list;
+#define obj_iv(p) (p->data.symbol.value)    /* identifier */
 
 int init_obj(void);
 
@@ -77,6 +78,10 @@ object* car(object *pair);
 object* cdr(object *pair);
 int set_car(object *pair, object *car);
 int set_cdr(object *pair, object *cdr);
+
+object* make_symbol(char *sym);
+int is_symbol(object *obj);
+int symbol_init();
 
 #endif
 

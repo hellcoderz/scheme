@@ -248,11 +248,10 @@ static object* parse_string(FILE *in) {
             str = sstream_cstr(stream);
             if (str == NULL) {
                 fprintf(stderr, "%s", "no memory\n");
-                return NULL;
+            } else {
+                obj = make_string(str);
+                sc_free(str);
             }
-            sstream_dispose(stream);
-            obj = make_string(str);
-            sc_free(str);
             break;
         } else if (c == '\\') {
             char x;
@@ -261,22 +260,24 @@ static object* parse_string(FILE *in) {
             next = peek(in);
             if (get_escape_char(in, &x) != 0) {
                 fprintf(stderr, "unknown escape sequence `%c\n", next);
-                return NULL;
+                break;
             }
             if (x != '\0' && sstream_append(stream, x) != 0) {
-                fprintf(stderr, "%s", "no memory\n");
-                return NULL;
+                fprintf(stderr, "%s", "internal error\n");
+                break;
             }
         } else if (c == EOF) {
             fprintf(stderr, "%s", "EOF encounted\n");
-            return NULL;
+            break;
         } else {
             if (sstream_append(stream, c) != 0) {
-                fprintf(stderr, "%s", "no memory\n");
-                return NULL;
+                fprintf(stderr, "%s", "internal error\n");
+                break;
             }
         }
     }
+
+    sstream_dispose(stream);
     return obj;
 }
 
@@ -337,6 +338,74 @@ static object* parse_list(FILE *in) {
     return NULL;
 }
 
+static int is_symbol_start(int c, int ahead) {
+    if (isalpha(c) ||
+        ((c == '+' || c == '-') && !isdigit(ahead)) ||
+        c == '!' || c == '$' || c == '%' || c == '&' ||
+        c == '*' || c == '.' || c == '/' || c == ':' ||
+        c == '<' || c == '=' || c == '>' || c == '?' ||
+        c == '@' || c == '^' || c == '_' || c == '~') {
+        return 1;
+    }
+    return 0;
+}
+
+static int is_symbol_char(int c) {
+    if (isalpha(c) || isdigit(c) || c == '+' || c == '-' ||
+        c == '!' || c == '$' || c == '%' || c == '&' ||
+        c == '*' || c == '.' || c == '/' || c == ':' ||
+        c == '<' || c == '=' || c == '>' || c == '?' ||
+        c == '@' || c == '^' || c == '_' || c == '~') {
+        return 1;
+    }
+    return 0;
+}
+
+static object* parse_symbol(FILE *in) {
+    object *obj = NULL;
+    int c;
+    sstream *stream;
+
+    stream = sstream_new(-1);
+    if (stream == NULL) {
+        fprintf(stderr, "%s", "no memory for stream\n");
+        return NULL;
+    }
+    
+    for (;;) {
+        c = getc(in);
+        if (is_symbol_char(c)) {
+            int ret;
+            
+            ret = sstream_append(stream, c);
+            if (ret != 0) {
+                fprintf(stderr, "%s", "internal error\n");
+                break;
+            }
+        } else {
+            if (is_delimiter(c)) {
+                char *sym;
+
+                ungetc(c, in);
+                sym = sstream_cstr(stream);
+                if (sym == NULL) {
+                    fprintf(stderr, "%s", "internal error\n");
+                } else {
+                    obj = make_symbol(sym);
+                    sc_free(sym);
+                }
+            } else {
+                fprintf(stderr, "%s `%c\n",
+                        "unexpected input", c);
+            }
+            break;
+        }
+    }
+
+    sstream_dispose(stream);
+    return obj;
+}
+
 object* sc_read(FILE *in) {
     int c;
     object *obj;
@@ -363,6 +432,9 @@ object* sc_read(FILE *in) {
         obj = parse_string(in);
     } else if (is_list_start(c)) {
         obj = parse_list(in);
+    } else if (is_symbol_start(c, peek(in))) {
+        ungetc(c, in);
+        obj = parse_symbol(in);
     } else {
         fprintf(stderr, "bad input, at `%c\n", c);
         obj = NULL;

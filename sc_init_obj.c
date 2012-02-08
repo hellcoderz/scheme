@@ -1,4 +1,5 @@
 #include "sc_object.h"
+#include "sc_sform.h"
 
 int init_obj(void) {
     int ret;
@@ -14,6 +15,11 @@ int init_obj(void) {
     }
 
     ret = symbol_init();
+    if (ret != 0) {
+        return ret;
+    }
+
+    ret = sform_init();
     return ret;
 }
 

@@ -6,6 +6,7 @@
 #include "sc_reader.h"
 #include "sc_log.h"
 #include "sc_sstream.h"
+#include "sc_sform.h"
 
 static int is_delimiter(int c) {
     return isspace(c) || c == EOF ||
@@ -406,6 +407,24 @@ static object* parse_symbol(FILE *in) {
     return obj;
 }
 
+static int is_quote_start(int c) {
+    return c == '\'';
+}
+
+static object* parse_quote_form(FILE *in) {
+    object *quote, *obj, *cdr_obj;
+
+    quote = get_quote_symbol();
+    cdr_obj = sc_read(in);
+    if (cdr_obj == NULL) {
+        obj = NULL;
+    } else {
+        obj = cons(quote, cons(cdr_obj, make_empty_list()));
+    }
+
+    return obj;
+}
+
 object* sc_read(FILE *in) {
     int c;
     object *obj;
@@ -435,6 +454,8 @@ object* sc_read(FILE *in) {
     } else if (is_symbol_start(c, peek(in))) {
         ungetc(c, in);
         obj = parse_symbol(in);
+    } else if (is_quote_start(c)) {
+        obj = parse_quote_form(in);
     } else {
         fprintf(stderr, "bad input, at `%c\n", c);
         obj = NULL;

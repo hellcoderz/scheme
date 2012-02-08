@@ -9,24 +9,31 @@
 int sc_repl(void) {
     object *exp, *val;
     int ret = 0;
+    int err_cnt = 0;
     FILE *in;
 
     in = stdin;
     for (;;) {
-        printf("%s", PROMPT);
+        if (err_cnt > 0) {
+            printf("%d%s", err_cnt, PROMPT);
+        } else {
+            printf("%s", PROMPT);
+        }
 
         exp = sc_read(in);
         if (exp == NULL) {
-            if (!feof(in)) {
-                ret = 1;
+            if (feof(in)) {
+                break;
             }
-            break;
+
+            err_cnt++;
+            continue;
         }
 
         val = sc_eval(exp);
         if (val == NULL) {
-            ret = 1;
-            break;
+            err_cnt++;
+            continue;
         }
 
         ret = sc_write(val);

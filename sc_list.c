@@ -4,7 +4,7 @@
 
 object *g_the_empty_list;
 
-object* make_empty_list() {
+object* get_empty_list() {
     return g_the_empty_list;
 }
 

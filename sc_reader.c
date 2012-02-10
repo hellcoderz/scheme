@@ -294,7 +294,7 @@ static object* parse_list(FILE *in) {
     c = peek(in);
     if (c == ')') {
         getc(in);
-        return make_empty_list();
+        return get_empty_list();
     }
 
     car_obj = sc_read(in);
@@ -419,7 +419,7 @@ static object* parse_quote_form(FILE *in) {
     if (cdr_obj == NULL) {
         obj = NULL;
     } else {
-        obj = cons(quote, cons(cdr_obj, make_empty_list()));
+        obj = cons(quote, cons(cdr_obj, get_empty_list()));
     }
 
     return obj;

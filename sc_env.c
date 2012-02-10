@@ -90,7 +90,7 @@ int define_variable(object *var, object *val, object *env) {
 int setup_env(void) {
     object *e;
 
-    e = make_empty_list();
+    e = get_empty_list();
     g_empty_env = e;
     g_global_env = extend_env(e, e, g_empty_env);
     return 0;

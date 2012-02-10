@@ -98,7 +98,7 @@ int is_character(object *obj);
 object* make_string(char *str);
 int is_string(object *obj);
 
-object* make_empty_list();
+object* get_empty_list();
 int is_empty_list(object *obj);
 int empty_list_init();
 

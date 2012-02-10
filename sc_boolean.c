@@ -37,7 +37,7 @@ int is_boolean(object *obj) {
 }
 
 int is_true(object *obj) {
-    return obj == g_true_val;
+    return obj != g_false_val && obj != NULL;
 }
 
 int is_false(object *obj) {

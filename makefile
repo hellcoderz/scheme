@@ -4,11 +4,16 @@ OBJS += sc_init_obj.o sc_boolean.o sc_character.o
 OBJS += sc_sstream.o sc_string.o sc_list.o sc_symbol.o sc_symtbl.o
 OBJS += sc_sform.o sc_env.o
 
+CFLAG = -Wall -c -O2
+ifeq ($(DEBUG), 1)
+	CFLAG += -g
+endif
+
 scheme: $(OBJS)
 	cc $^ -o scheme
 
 %.o: %.c
-	cc -Wall -c -O2 $< -o $@
+	cc $(CFLAG) $< -o $@
 
 .PHONY: clean
 clean:

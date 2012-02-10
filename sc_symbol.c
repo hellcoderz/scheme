@@ -12,7 +12,7 @@ object* make_symbol(char *sym) {
 }
 
 int is_symbol(object *obj) {
-    return type(obj) == SYMBOL;
+    return obj != NULL && type(obj) == SYMBOL;
 }
 
 int symbol_init() {

@@ -5,7 +5,8 @@
 static object *g_quote_symbol;
 static object *g_set_symbol;
 static object *g_define_symbol;
-static object *g_nrv_symbol;
+static object *g_nrv_symbol; /* No Return Value symbol */
+static object *g_if_symbol;
 
 #define DEFINE_SYMBOL(var, sym) \
 {                           \
@@ -22,6 +23,7 @@ int sform_init(void) {
     DEFINE_SYMBOL(g_set_symbol, "set!");
     DEFINE_SYMBOL(g_define_symbol, "define");
     DEFINE_SYMBOL(g_nrv_symbol, "; no value returned");
+    DEFINE_SYMBOL(g_if_symbol, "if");
 
     return 0;
 }
@@ -40,5 +42,9 @@ object* get_define_symbol(void) {
 
 object* get_nrv_symbol(void) {
     return g_nrv_symbol;
+}
+
+object* get_if_symbol(void) {
+    return g_if_symbol;
 }
 

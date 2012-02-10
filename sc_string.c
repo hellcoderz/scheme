@@ -28,6 +28,6 @@ object* make_string(char *str) {
 }
 
 int is_string(object *obj) {
-    return type(obj) == STRING;
+    return obj != NULL && type(obj) == STRING;
 }
 

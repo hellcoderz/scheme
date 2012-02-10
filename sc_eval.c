@@ -48,13 +48,13 @@ static object* assignment_value(object *exp) {
 
 static object* eval_assignment(object *exp, object *env) {
     object *var, *val;
-    char msg[] = "wrong arity\n";
+    char msg[] = "wrong arity in `set! form\n";
     int ret;
 
     var = assignment_variable(exp);
     val = assignment_value(exp);
     if (val == NULL || var == NULL || 
-        cadddr(exp) != NULL) {
+        !is_empty_list(cdddr(exp))) {
         fprintf(stderr, "%s", msg);
         return NULL;
     }
@@ -89,13 +89,13 @@ static object* definition_value(object *exp) {
 
 static object* eval_definition(object *exp, object *env) {
     object *var, *val;
-    char msg[] = "wrong arity\n";
+    char msg[] = "wrong arity in `define form\n";
     int ret;
 
     var = definition_variable(exp);
     val = definition_value(exp);
     if (val == NULL || var == NULL || 
-        cadddr(exp) != NULL) {
+        !is_empty_list(cdddr(exp))) {
         fprintf(stderr, "%s", msg);
         return NULL;
     }
@@ -128,9 +128,40 @@ static object* eval_variable(object *exp, object *env) {
     return obj;
 }
 
+static int is_if(object *exp) {
+    return is_tagged_list(exp, get_if_symbol());
+}
+
+static object* if_predicate(object *exp) {
+    return cadr(exp);
+}
+
+static object* if_consequence(object *exp) {
+    return caddr(exp);
+}
+
+static object* if_alternative(object *exp) {
+    object *alter;
+    
+    alter = cdddr(exp);
+    if (is_empty_list(alter)) {
+        return make_boolean('f');
+    } else {
+        return car(alter);
+    }
+
+    return NULL;
+}
+
+static int check_if_arity(object *exp) {
+    return is_empty_list(cdddr(exp)) ||
+           is_empty_list(cddddr(exp));
+}
+
 object* sc_eval(object *exp, object *env) {
     object *val;
 
+tailcall:
     if (exp == NULL) {
         sc_log("cannot eval NULL exp\n");
         return NULL;
@@ -146,6 +177,16 @@ object* sc_eval(object *exp, object *env) {
         val = eval_assignment(exp, env);
     } else if (is_definition(exp)) {
         val = eval_definition(exp, env);
+    } else if (is_if(exp)) {
+        object *pred;
+        if (!check_if_arity(exp)) {
+            fprintf(stderr, "%s\n",
+                    "wrong arity in `if form");
+            return NULL;
+        }
+        pred = sc_eval(if_predicate(exp), env);
+        exp = is_true(pred) ? if_consequence(exp) : if_alternative(exp);
+        goto tailcall;
     } else {
         val = NULL;
         fprintf(stderr,

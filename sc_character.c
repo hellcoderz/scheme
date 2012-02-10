@@ -12,6 +12,6 @@ object* make_character(int val) {
 }
 
 int is_character(object *obj) {
-    return type(obj) == CHARACTER;
+    return obj != NULL && type(obj) == CHARACTER;
 }
 

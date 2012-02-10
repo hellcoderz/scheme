@@ -9,6 +9,9 @@ object* get_empty_list() {
 }
 
 int is_empty_list(object *obj) {
+    if (obj == NULL) {
+        return 0;
+    }
     return type(obj) == THE_EMPTY_LIST;
 }
 
@@ -24,7 +27,7 @@ int empty_list_init() {
 
 
 int is_pair(object *obj) {
-    return type(obj) == PAIR;
+    return obj != NULL && type(obj) == PAIR;
 }
 
 object* cons(object *car, object *cdr) {

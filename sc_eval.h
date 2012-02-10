@@ -3,6 +3,6 @@
 
 #include "sc_object.h"
 
-object* sc_eval(object *exp);
+object* sc_eval(object *exp, object *env);
 
 #endif

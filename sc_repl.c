@@ -5,6 +5,7 @@
 #include "sc_print.h"
 #include "sc_eval.h"
 #include "sc_repl.h"
+#include "sc_env.h"
 
 int sc_repl(void) {
     object *exp, *val;
@@ -30,7 +31,7 @@ int sc_repl(void) {
             continue;
         }
 
-        val = sc_eval(exp);
+        val = sc_eval(exp, get_global_env());
         if (val == NULL) {
             err_cnt++;
             continue;

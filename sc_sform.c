@@ -3,20 +3,42 @@
 #include "sc_sform.h"
 
 static object *g_quote_symbol;
+static object *g_set_symbol;
+static object *g_define_symbol;
+static object *g_nrv_symbol;
 
-int sform_init() {
-    object *obj;
+#define DEFINE_SYMBOL(var, sym) \
+{                           \
+    object *obj;            \
+    obj = make_symbol(sym); \
+    if (obj == NULL) {      \
+        return -1;          \
+    }                       \
+    var = obj;              \
+}
 
-    obj = make_symbol("quote");
-    if (obj == NULL) {
-        return -1;
-    }
+int sform_init(void) {
+    DEFINE_SYMBOL(g_quote_symbol, "quote");
+    DEFINE_SYMBOL(g_set_symbol, "set!");
+    DEFINE_SYMBOL(g_define_symbol, "define");
+    DEFINE_SYMBOL(g_nrv_symbol, "; no value returned");
 
-    g_quote_symbol = obj;
     return 0;
 }
 
-object* get_quote_symbol() {
+object* get_quote_symbol(void) {
     return g_quote_symbol;
+}
+
+object* get_set_symbol(void) {
+    return g_set_symbol;
+}
+
+object* get_define_symbol(void) {
+    return g_define_symbol;
+}
+
+object* get_nrv_symbol(void) {
+    return g_nrv_symbol;
 }
 

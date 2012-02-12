@@ -8,8 +8,8 @@
     obj_bv(p) = v; \
     type(p) = BOOLEAN;
 
-object *g_true_val;
-object *g_false_val;
+static object *g_true_val;
+static object *g_false_val;
 
 object* make_boolean(int value) {
     object *obj;
@@ -26,6 +26,14 @@ object* make_boolean(int value) {
     }
 
     return obj;
+}
+
+object* get_true_obj(void) {
+    return g_true_val;
+}
+
+object* get_false_obj(void) {
+    return g_false_val;
 }
 
 int is_boolean(object *obj) {

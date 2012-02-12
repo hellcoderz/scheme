@@ -4,6 +4,7 @@
 #include "sc_log.h"
 #include "sc_sform.h"
 #include "sc_env.h"
+#include "sc_procdef.h"
 
 static int is_self_evaluate(object *exp) {
     return is_fixnum(exp) ||
@@ -145,7 +146,7 @@ static object* if_alternative(object *exp) {
     
     alter = cdddr(exp);
     if (is_empty_list(alter)) {
-        return make_boolean('f');
+        return get_false_obj(); /* undefined */
     } else {
         return car(alter);
     }
@@ -156,6 +157,66 @@ static object* if_alternative(object *exp) {
 static int check_if_arity(object *exp) {
     return is_empty_list(cdddr(exp)) ||
            is_empty_list(cddddr(exp));
+}
+
+static int is_application(object *exp) {
+    return is_pair(exp);
+}
+
+static object* operator(object *exp) {
+    return car(exp);
+}
+
+static object* operands(object *exp) {
+    return cdr(exp);
+}
+
+static int is_no_operands(object *ops) {
+    return is_empty_list(ops);
+}
+
+static object* first_operand(object *ops) {
+    return car(ops);
+}
+
+static object* rest_operands(object *ops) {
+    return cdr(ops);
+}
+
+static object* list_of_values(object *ops, object *env) {
+    if (is_no_operands(ops)) {
+        return get_empty_list();
+    } else {
+        return cons(sc_eval(first_operand(ops), env),
+                    list_of_values(rest_operands(ops), env));
+    }
+}
+
+static object* eval_application(object *exp, object *env) {
+    object *op, *args;
+    prim_proc fn;
+    object *ret;
+    int err;
+
+    op = sc_eval(operator(exp), env);
+    if (!is_primitive_proc(op)) {
+        fprintf(stderr, "%s\n", "not applicable");
+        return NULL;
+    }
+    fn = obj_fv(op);
+    if (fn == NULL) {
+        sc_log("invalid primitive procedure\n");
+        return NULL;
+    }
+
+    args = list_of_values(operands(exp), env);
+    err = fn(args, &ret);
+    if (err != 0) {
+        fprintf(stderr, "%s\n", error_str(err));
+        return NULL;
+    }
+
+    return ret;
 }
 
 object* sc_eval(object *exp, object *env) {
@@ -187,6 +248,8 @@ tailcall:
         pred = sc_eval(if_predicate(exp), env);
         exp = is_true(pred) ? if_consequence(exp) : if_alternative(exp);
         goto tailcall;
+    } else if (is_application(exp)) {
+        val = eval_application(exp, env);
     } else {
         val = NULL;
         fprintf(stderr,

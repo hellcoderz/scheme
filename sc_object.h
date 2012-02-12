@@ -16,7 +16,12 @@ typedef enum {
     THE_EMPTY_LIST,
     PAIR,
     SYMBOL,
+    PRIMITIVE_PROC,
 } object_type;
+
+struct object;
+typedef int (*prim_proc)(struct object *params, 
+                         struct object **result);
 
 typedef struct object {
     object_type type;
@@ -40,6 +45,9 @@ typedef struct object {
         struct {
             char *value;
         } symbol;
+        struct {
+            prim_proc fn;
+        } primitive_proc;
     } data;
 } object;
 
@@ -50,6 +58,7 @@ typedef struct object {
 #define obj_sv(p) (p->data.string.buf)
 #define obj_pv(p) (p->data.pair)
 #define obj_iv(p) (p->data.symbol.value)    /* identifier */
+#define obj_fv(p) (p->data.primitive_proc.fn)
 
 
 #define caar(obj)   car(car(obj))
@@ -87,6 +96,8 @@ object* make_fixnum(long value);
 int is_fixnum(object *obj);
 
 object* make_boolean(int value);
+object* get_false_obj(void);
+object* get_true_obj(void);
 int boolean_init(void);
 int is_boolean(object *obj);
 int is_true(object *obj);
@@ -112,6 +123,9 @@ int set_cdr(object *pair, object *cdr);
 object* make_symbol(char *sym);
 int is_symbol(object *obj);
 int symbol_init();
+
+object* make_primitive_proc(prim_proc fn);
+int is_primitive_proc(object *obj);
 
 #endif
 

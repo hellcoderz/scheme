@@ -2,7 +2,7 @@
 #define _SC_CONFIG_H_
 
 #define WELCOME_STR \
-    "Welcome to Bootstrap Scheme.\n" \
+    "SC-Scheme (C) cpylua<zombiefml@gmail.com>\n" \
     "Use CTRL-c to exit.\n"
 
 #define PROMPT "> "

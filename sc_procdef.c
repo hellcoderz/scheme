@@ -565,6 +565,50 @@ static int cdr_proc(object *params, object **result) {
     return 0;
 }
 
+#define DEFINE_LIST_OP(name) \
+    static int name ## _proc(object *params, object **result) { \
+        if (result == NULL) { \
+            return SC_E_NULL; \
+        } \
+        if (!is_empty_list(cdr(params))) { \
+            return SC_E_ARITY; \
+        } \
+        *result = name(car(params)); \
+        if (*result == NULL) { \
+            return SC_E_ARG_INVL; \
+        } \
+        return 0; \
+    }
+
+DEFINE_LIST_OP(caar)
+DEFINE_LIST_OP(cadr)
+DEFINE_LIST_OP(cdar)
+DEFINE_LIST_OP(cddr)
+DEFINE_LIST_OP(caaar)
+DEFINE_LIST_OP(caadr)
+DEFINE_LIST_OP(cadar)
+DEFINE_LIST_OP(caddr)
+DEFINE_LIST_OP(cdaar)
+DEFINE_LIST_OP(cdadr)
+DEFINE_LIST_OP(cddar)
+DEFINE_LIST_OP(cdddr)
+DEFINE_LIST_OP(caaaar)
+DEFINE_LIST_OP(caaadr)
+DEFINE_LIST_OP(caadar)
+DEFINE_LIST_OP(caaddr)
+DEFINE_LIST_OP(cadaar)
+DEFINE_LIST_OP(cadadr)
+DEFINE_LIST_OP(caddar)
+DEFINE_LIST_OP(cadddr)
+DEFINE_LIST_OP(cdaaar)
+DEFINE_LIST_OP(cdaadr)
+DEFINE_LIST_OP(cdadar)
+DEFINE_LIST_OP(cdaddr)
+DEFINE_LIST_OP(cddaar)
+DEFINE_LIST_OP(cddadr)
+DEFINE_LIST_OP(cdddar)
+DEFINE_LIST_OP(cddddr)
+
 static int set_car_proc(object *params, object **result) {
     object *pair, *car_obj;
 
@@ -671,6 +715,8 @@ static int is_eq_proc(object *params, object **result) {
     return 0;
 }
 
+#define DEFINE_LIST_PROC(name) \
+    define_proc(#name, name ## _proc)
 
 int init_primitive(void) {
     define_proc("null?", is_null_proc);
@@ -701,8 +747,36 @@ int init_primitive(void) {
     define_proc(">=", is_number_greater_equal_proc);
 
     define_proc("cons", cons_proc);
-    define_proc("car", car_proc);
-    define_proc("cdr", cdr_proc);
+    DEFINE_LIST_PROC(car);
+    DEFINE_LIST_PROC(cdr);
+    DEFINE_LIST_PROC(cdar);
+    DEFINE_LIST_PROC(cadr);
+    DEFINE_LIST_PROC(caar);
+    DEFINE_LIST_PROC(cddr);
+    DEFINE_LIST_PROC(caaar);
+    DEFINE_LIST_PROC(caadr);
+    DEFINE_LIST_PROC(cadar);
+    DEFINE_LIST_PROC(caddr);
+    DEFINE_LIST_PROC(cdaar);
+    DEFINE_LIST_PROC(cdadr);
+    DEFINE_LIST_PROC(cddar);
+    DEFINE_LIST_PROC(cdddr);
+    DEFINE_LIST_PROC(caaaar);
+    DEFINE_LIST_PROC(caaadr);
+    DEFINE_LIST_PROC(caadar);
+    DEFINE_LIST_PROC(caaddr);
+    DEFINE_LIST_PROC(cadaar);
+    DEFINE_LIST_PROC(cadadr);
+    DEFINE_LIST_PROC(caddar);
+    DEFINE_LIST_PROC(cadddr);
+    DEFINE_LIST_PROC(cdaaar);
+    DEFINE_LIST_PROC(cdaadr);
+    DEFINE_LIST_PROC(cdadar);
+    DEFINE_LIST_PROC(cdaddr);
+    DEFINE_LIST_PROC(cddaar);
+    DEFINE_LIST_PROC(cddadr);
+    DEFINE_LIST_PROC(cdddar);
+    DEFINE_LIST_PROC(cddddr);
     define_proc("set-car!", set_car_proc);
     define_proc("set-cdr!", set_cdr_proc);
     define_proc("list", list_proc);

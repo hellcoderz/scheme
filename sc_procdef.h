@@ -4,6 +4,9 @@
 enum {
     SC_E_ARG_TYPE = 100,
     SC_E_NO_MEM,
+    SC_E_NULL,
+    SC_E_ARITY,
+    SC_E_ARG_INVL,
 };
 
 int init_primitive(void);

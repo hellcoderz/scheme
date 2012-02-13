@@ -6,6 +6,7 @@
 #include "sc_procdef.h"
 #include "sc_env.h"
 #include "sc_sform.h"
+#include "sc_repl.h"
 
 static int define_proc(char *sym, prim_proc fn) {
     object *sym_obj, *proc_obj;
@@ -683,8 +684,6 @@ static int is_eq(object *this, object *that) {
             return obj_nv(a) == obj_nv(b);
         case CHARACTER:
             return obj_cv(a) == obj_cv(b);
-        case STRING:
-            return strcmp(obj_sv(a), obj_sv(b)) == 0;
         case PAIR:
             return is_list_eq(a, b);
         default:
@@ -712,6 +711,18 @@ static int is_eq_proc(object *params, object **result) {
     } else {
         *result = get_false_obj();
     }
+    return 0;
+}
+
+static int exit_proc(object *params, object **result) {
+    if (result == NULL) {
+        return SC_E_NULL;
+    }
+    if (!is_empty_list(params)) {
+        return SC_E_ARITY;
+    }
+    *result = get_nrv_symbol();
+    repl_exit();
     return 0;
 }
 
@@ -782,6 +793,8 @@ int init_primitive(void) {
     define_proc("list", list_proc);
 
     define_proc("eq?", is_eq_proc);
+
+    define_proc("exit", exit_proc);
     return 0;
 }
 

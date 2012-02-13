@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "sc_object.h"
 #include "sc_mem.h"
-#include "sc_symtbl.h"
+#include "sc_hashtbl.h"
 #include "sc_log.h"
 
 typedef struct node {
@@ -18,32 +18,37 @@ typedef struct bucket {
 
 #define DEFAULT_BUCKET_NUM 4099
 
+#if 0
+#define DEBUG_HASHTBL 1
+#endif
 
-symtbl* symtbl_new() {
-    symtbl *tbl;
+hashtbl* hashtbl_new(create_fn fn) {
+    hashtbl *tbl;
     bucket *bucketp;
 
-    tbl = sc_malloc(sizeof(symtbl));
+    tbl = sc_malloc(sizeof(hashtbl));
     if (tbl == NULL) {
-        sc_log("no memory for symtbl\n");
+        sc_log("no memory for hashtbl\n");
         return NULL;
     }
 
     bucketp = sc_malloc(sizeof(bucket) * DEFAULT_BUCKET_NUM);
     if (bucketp == NULL) {
-        sc_log("no memory for symtbl\n");
+        sc_log("no memory for hashtbl\n");
         sc_free(tbl);
         return NULL;
     }
     memset(bucketp, 0, sizeof(bucket) * DEFAULT_BUCKET_NUM);
     tbl->bsize = DEFAULT_BUCKET_NUM;
     tbl->buckets = bucketp;
+    tbl->create = fn;
     return tbl;
 }
 
-void symtbl_dispose(symtbl *tbl) {
-    /* TODO not implemented */
-    return;
+void hashtbl_dispose(hashtbl *tbl) {
+    /* do not handle nodes, let gc do it */
+    sc_free(tbl->buckets);
+    sc_free(tbl);
 }
 
 static unsigned int hash(char *data) {
@@ -57,36 +62,22 @@ static unsigned int hash(char *data) {
     return h;
 }
 
-static object* internal_make_symbol(char *sym) {
-    object *sym_obj;
-    char *p;
-    int len;
-
-    len = strlen(sym);
-    p = sc_malloc(len + 1);
-    if (p == NULL) {
-        sc_log("no memory\n");
-        return NULL;
-    }
-    strcpy(p, sym);
-
-    sym_obj = alloc_object();
-    obj_iv(sym_obj) = p;
-    type(sym_obj) = SYMBOL;
-    return sym_obj;
-}
-
-object* symtbl_insert(symtbl *tbl, char *sym) {
+object* hashtbl_insert(hashtbl *tbl, char *sym) {
     unsigned int h;
     object *sym_obj;
     bucket *p;
     node *np;
     int i;
 
+    if (tbl == NULL || tbl->create == NULL) {
+        return NULL;
+    }
+
     h = hash(sym);
     i = h % tbl->bsize;
     p = (bucket*)(tbl->buckets) + i;
     np = p->next;
+
     while (np != NULL) {
         if (np->hash == h && 
             strcmp(sym, obj_iv(np->sym)) == 0) {
@@ -97,13 +88,17 @@ object* symtbl_insert(symtbl *tbl, char *sym) {
 
     if (np == NULL) {
         /* insert new */
-        sym_obj = internal_make_symbol(sym);
+#ifdef DEBUG_HASHTBL
+        printf("insert new node: %s\n", sym);
+#endif
+
+        sym_obj = tbl->create(sym);
         if (sym_obj == NULL) {
             return NULL;
         }
         np = sc_malloc(sizeof(node));
         if (np == NULL) {
-            sc_log("no memory for symtbl\n");
+            sc_log("no memory for hashtbl\n");
             return NULL;
         }
         np->next = p->next;
@@ -111,6 +106,10 @@ object* symtbl_insert(symtbl *tbl, char *sym) {
         np->sym = sym_obj;
         np->hash = h;
     } else {
+#ifdef DEBUG_HASHTBL
+        printf("node already exists: %s\n", sym);
+#endif
+
         sym_obj = np->sym;
     }
     return sym_obj;

@@ -7,6 +7,8 @@
 #include "sc_repl.h"
 #include "sc_env.h"
 
+static int keep_run = 1;
+
 int sc_repl(void) {
     object *exp, *val;
     int ret = 0;
@@ -14,7 +16,7 @@ int sc_repl(void) {
     FILE *in;
 
     in = stdin;
-    for (;;) {
+    while (keep_run) {
         if (err_cnt > 0) {
             printf("%d%s", err_cnt, PROMPT);
         } else {
@@ -45,5 +47,9 @@ int sc_repl(void) {
     }
 
     return ret;
+}
+
+void repl_exit(void) {
+    keep_run = 0;
 }
 

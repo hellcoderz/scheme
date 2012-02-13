@@ -20,6 +20,11 @@ int init_obj(void) {
         return ret;
     }
 
+    ret = string_init();
+    if (ret != 0) {
+        return ret;
+    }
+
     ret = sform_init();
     if (ret != 0) {
         return ret;
@@ -27,5 +32,10 @@ int init_obj(void) {
 
     ret = setup_env();
     return ret;
+}
+
+void dispose_obj(void) {
+    symbol_dispose();
+    string_dispose();
 }
 

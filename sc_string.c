@@ -2,9 +2,12 @@
 #include <stdlib.h>
 #include "sc_object.h"
 #include "sc_mem.h"
+#include "sc_hashtbl.h"
 #include "sc_log.h"
 
-object* make_string(char *str) {
+static hashtbl* g_strtbl;
+
+static object* internal_make_string(char *str) {
     object *obj;
     char *p;
     int len;
@@ -25,6 +28,23 @@ object* make_string(char *str) {
     obj_sv(obj) = p;
     type(obj) = STRING;
     return obj;
+}
+
+int string_init(void) {
+    g_strtbl = hashtbl_new(internal_make_string);
+    if (g_strtbl == NULL) {
+        sc_log("failed to initialize string table\n");
+        return 1;
+    }
+    return 0;
+}
+
+void string_dispose(void) {
+    hashtbl_dispose(g_strtbl);
+}
+
+object* make_string(char *str) {
+    return hashtbl_insert(g_strtbl, str);
 }
 
 int is_string(object *obj) {

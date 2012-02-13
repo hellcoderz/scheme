@@ -15,13 +15,21 @@ static int init(void) {
     return 0;
 }
 
+static void dispose(void) {
+    dispose_obj();
+}
+
 int main(int argc, char **argv) {
+    int ret;
+
     if (init() != 0) {
         return -1;
     }
 
     printf("%s", WELCOME_STR);
 
-    return sc_repl();
+    ret = sc_repl();
+    dispose();
+    return ret;
 }
 

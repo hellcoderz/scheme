@@ -91,6 +91,7 @@ typedef struct object {
 #define cddddr(obj) cdr(cdr(cdr(cdr(obj))))
 
 int init_obj(void);
+void dispose_obj(void);
 
 object* make_fixnum(long value);
 int is_fixnum(object *obj);
@@ -108,6 +109,8 @@ int is_character(object *obj);
 
 object* make_string(char *str);
 int is_string(object *obj);
+int string_init(void);
+void string_dispose(void);
 
 object* get_empty_list();
 int is_empty_list(object *obj);
@@ -123,6 +126,7 @@ int set_cdr(object *pair, object *cdr);
 object* make_symbol(char *sym);
 int is_symbol(object *obj);
 int symbol_init();
+void symbol_dispose(void);
 
 object* make_primitive_proc(prim_proc fn);
 int is_primitive_proc(object *obj);

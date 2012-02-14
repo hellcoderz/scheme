@@ -17,6 +17,7 @@ typedef enum {
     PAIR,
     SYMBOL,
     PRIMITIVE_PROC,
+    COMPOUND_PROC,
 } object_type;
 
 struct object;
@@ -48,6 +49,11 @@ typedef struct object {
         struct {
             prim_proc fn;
         } primitive_proc;
+        struct {
+            struct object *parameters;
+            struct object *body;
+            struct object *env;
+        } compound_proc;
     } data;
 } object;
 
@@ -59,6 +65,10 @@ typedef struct object {
 #define obj_pv(p) (p->data.pair)
 #define obj_iv(p) (p->data.symbol.value)    /* identifier */
 #define obj_fv(p) (p->data.primitive_proc.fn)
+#define obj_lv(p) (p->data.compound_proc)  /* lambda */
+#define obj_lvp(p) (obj_lv(p).parameters)
+#define obj_lvb(p) (obj_lv(p).body)
+#define obj_lve(p) (obj_lv(p).env)
 
 
 #define caar(obj)   car(car(obj))
@@ -130,6 +140,9 @@ void symbol_dispose(void);
 
 object* make_primitive_proc(prim_proc fn);
 int is_primitive_proc(object *obj);
+
+object* make_compound_proc(object *params, object *body, object *env);
+int is_compound_proc(object *obj);
 
 #endif
 

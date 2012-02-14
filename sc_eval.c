@@ -76,16 +76,55 @@ static object* eval_assignment(object *exp, object *env) {
     return get_nrv_symbol();
 }
 
+static object* make_lambda(object *parameters, object *body) {
+    return cons(get_lambda_symbol(),
+                cons(parameters, body));
+}
+
+static int is_lambda(object *exp) {
+    return is_tagged_list(exp, get_lambda_symbol());
+}
+
+static object* lambda_parameters(object *exp) {
+    return cadr(exp);
+}
+
+static object* lambda_body(object *exp) {
+    return cddr(exp);
+}
+
+static int is_last_exp(object *exp) {
+    return is_empty_list(cdr(exp));
+}
+
+static object* first_exp(object *exp) {
+    return car(exp);
+}
+
+static object* rest_exps(object *exp) {
+    return cdr(exp);
+}
+
 static int is_definition(object *exp) {
     return is_tagged_list(exp, get_define_symbol());
 }
 
 static object* definition_variable(object *exp) {
-    return cadr(exp);
+    if (is_symbol(cadr(exp))) {
+        return cadr(exp);
+    } else {
+        /* lambda syntax sugar */
+        return caadr(exp);
+    }
 }
 
 static object* definition_value(object *exp) {
-    return caddr(exp);
+    if (is_symbol(cadr(exp))) {
+        return caddr(exp);
+    } else {
+        /* lambda syntax sugar */
+        return make_lambda(cdadr(exp), cddr(exp));
+    }
 }
 
 static object* eval_definition(object *exp, object *env) {
@@ -96,7 +135,7 @@ static object* eval_definition(object *exp, object *env) {
     var = definition_variable(exp);
     val = definition_value(exp);
     if (val == NULL || var == NULL || 
-        !is_empty_list(cdddr(exp))) {
+        (is_symbol(cadr(exp)) && !is_empty_list(cdddr(exp)))) {
         fprintf(stderr, "%s", msg);
         return NULL;
     }
@@ -192,33 +231,6 @@ static object* list_of_values(object *ops, object *env) {
     }
 }
 
-static object* eval_application(object *exp, object *env) {
-    object *op, *args;
-    prim_proc fn;
-    object *ret;
-    int err;
-
-    op = sc_eval(operator(exp), env);
-    if (!is_primitive_proc(op)) {
-        fprintf(stderr, "%s\n", "not applicable");
-        return NULL;
-    }
-    fn = obj_fv(op);
-    if (fn == NULL) {
-        sc_log("invalid primitive procedure\n");
-        return NULL;
-    }
-
-    args = list_of_values(operands(exp), env);
-    err = fn(args, &ret);
-    if (err != 0) {
-        fprintf(stderr, "%s\n", error_str(err));
-        return NULL;
-    }
-
-    return ret;
-}
-
 object* sc_eval(object *exp, object *env) {
     object *val;
 
@@ -248,8 +260,45 @@ tailcall:
         pred = sc_eval(if_predicate(exp), env);
         exp = is_true(pred) ? if_consequence(exp) : if_alternative(exp);
         goto tailcall;
+    } else if (is_lambda(exp)) {
+        return make_compound_proc(lambda_parameters(exp),
+                                  lambda_body(exp),
+                                  env);
     } else if (is_application(exp)) {
-        val = eval_application(exp, env);
+        object *op, *args;
+        prim_proc fn;
+        object *ret;
+        int err;
+
+        op = sc_eval(operator(exp), env);
+        args = list_of_values(operands(exp), env);
+        if (is_primitive_proc(op)) {
+            fn = obj_fv(op);
+            if (fn == NULL) {
+                sc_log("invalid primitive procedure\n");
+                return NULL;
+            }
+            err = fn(args, &ret);
+            if (err != 0) {
+                fprintf(stderr, "%s\n", error_str(err));
+                return NULL;
+            }
+            return ret;
+        } else if (is_compound_proc(op)) {
+            env = extend_env(obj_lvp(op),
+                             args,
+                             obj_lve(op));
+            exp = obj_lvb(op);
+            while (!is_last_exp(exp)) {
+                sc_eval(first_exp(exp), env);
+                exp = rest_exps(exp);
+            }
+            exp = first_exp(exp);
+            goto tailcall;
+        } else {
+            fprintf(stderr, "%s\n", "not applicable");
+            return NULL;
+        }
     } else {
         val = NULL;
         fprintf(stderr,

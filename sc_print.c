@@ -130,8 +130,8 @@ int sc_write(object *val) {
         printf(")");
     } else if (is_symbol(val)) {
         printf("%s", obj_iv(val));
-    } else if (is_primitive_proc(val)) {
-        printf("#<primitive-procedure>");
+    } else if (is_compound_proc(val) || is_primitive_proc(val)) {
+        printf("#<procedure@%p>", val);
     } else {
         fprintf(stderr,
                 "unknown type, cannot print\n");

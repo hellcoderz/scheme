@@ -139,6 +139,7 @@ static int is_pair_proc(object *params, object **result) {
 
 static int is_procedure_proc(object *params, object **result) {
     int ret;
+    object *obj;
 
     if (result == NULL) {
         return SC_E_NULL;
@@ -147,7 +148,8 @@ static int is_procedure_proc(object *params, object **result) {
         return SC_E_ARITY;
     }
 
-    ret = is_primitive_proc(car(params));
+    obj = car(params);
+    ret = is_primitive_proc(obj) || is_compound_proc(obj);
     *result = ret ? get_true_obj() : get_false_obj();
     return 0;
 }

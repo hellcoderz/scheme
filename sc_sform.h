@@ -10,6 +10,7 @@ object* get_set_symbol(void);
 object* get_define_symbol(void);
 object* get_if_symbol(void);
 object* get_nrv_symbol(void);
+object* get_lambda_symbol(void);
 
 #endif
 

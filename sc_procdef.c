@@ -28,6 +28,8 @@ char* error_str(int err) {
             return "wrong arity";
         case SC_E_ARG_INVL:
             return "invalid parameter";
+        case SC_E_DIV:
+            return "divide by zero";
     }
     return NULL;
 }
@@ -395,6 +397,9 @@ static int quotient_proc(object *params, object **result) {
     }
     a = obj_nv(obj_a);
     b = obj_nv(obj_b);
+    if (b == 0) {
+        return SC_E_DIV;
+    }
     quotient = a / b;
     *result = make_fixnum(quotient);
     if (*result == NULL) {
@@ -422,6 +427,9 @@ static int remainder_proc(object *params, object **result) {
     }
     a = obj_nv(obj_a);
     b = obj_nv(obj_b);
+    if (b == 0) {
+        return SC_E_DIV;
+    }
     remainder = a % b;
     *result = make_fixnum(remainder);
     if (*result == NULL) {

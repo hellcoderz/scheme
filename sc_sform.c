@@ -12,6 +12,8 @@ static object *g_begin_symbol;
 static object *g_cond_symbol;
 static object *g_else_symbol;
 static object *g_let_symbol;
+static object *g_and_symbol;
+static object *g_or_symbol;
 
 #define DEFINE_SYMBOL(var, sym) \
 {                           \
@@ -34,6 +36,8 @@ int sform_init(void) {
     DEFINE_SYMBOL(g_cond_symbol, "cond");
     DEFINE_SYMBOL(g_else_symbol, "else");
     DEFINE_SYMBOL(g_let_symbol, "let");
+    DEFINE_SYMBOL(g_and_symbol, "and");
+    DEFINE_SYMBOL(g_or_symbol, "or");
 
     return 0;
 }
@@ -76,5 +80,13 @@ object* get_else_symbol(void) {
 
 object* get_let_symbol(void) {
     return g_let_symbol;
+}
+
+object* get_and_symbol(void) {
+    return g_and_symbol;
+}
+
+object* get_or_symbol(void) {
+    return g_or_symbol;
 }
 

@@ -15,6 +15,8 @@ object* get_begin_symbol(void);
 object* get_cond_symbol(void);
 object* get_else_symbol(void);
 object* get_let_symbol(void);
+object* get_and_symbol(void);
+object* get_or_symbol(void);
 
 #endif
 

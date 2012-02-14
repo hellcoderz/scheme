@@ -436,6 +436,21 @@ static object* let_to_application(object *exp) {
                 vals);
 }
 
+static int is_and(object *exp) {
+    return is_tagged_list(exp, get_and_symbol());
+}
+
+static int is_or(object *exp) {
+    return is_tagged_list(exp, get_or_symbol());
+}
+
+static object* and_tests(object *exp) {
+    return cdr(exp);
+}
+
+static object* or_tests(object *exp) {
+    return cdr(exp);
+}
 
 
 object* sc_eval(object *exp, object *env) {
@@ -491,6 +506,36 @@ tailcall:
             fprintf(stderr, "malformed let form\n");
             return NULL;
         }
+        goto tailcall;
+    } else if (is_and(exp)) {
+        object *result;
+        exp = and_tests(exp);
+        if (is_empty_list(exp)) {
+            return get_true_obj();
+        }
+        while (!is_last_exp(exp)) {
+            result = sc_eval(first_exp(exp), env);
+            if (is_false(result)) {
+                return result;
+            }
+            exp = rest_exps(exp);
+        }
+        exp = first_exp(exp);
+        goto tailcall;
+    } else if (is_or(exp)) {
+        object *result;
+        exp = or_tests(exp);
+        if (is_empty_list(exp)) {
+            return get_false_obj();
+        }
+        while (!is_last_exp(exp)) {
+            result = sc_eval(first_exp(exp), env);
+            if (is_true(result)) {
+                return result;
+            }
+            exp = rest_exps(exp);
+        }
+        exp = first_exp(exp);
         goto tailcall;
     } else if (is_application(exp)) {
         object *op, *args;

@@ -93,6 +93,18 @@ static object* lambda_body(object *exp) {
     return cddr(exp);
 }
 
+static object* make_begin(object *exp) {
+    return cons(get_begin_symbol(), exp);
+}
+
+static int is_begin(object *exp) {
+    return is_tagged_list(exp, get_begin_symbol());
+}
+
+static object* begin_actions(object *exp) {
+    return cdr(exp);
+}
+
 static int is_last_exp(object *exp) {
     return is_empty_list(cdr(exp));
 }
@@ -264,6 +276,14 @@ tailcall:
         return make_compound_proc(lambda_parameters(exp),
                                   lambda_body(exp),
                                   env);
+    } else if (is_begin(exp)) {
+        exp = begin_actions(exp);
+        while (!is_last_exp(exp)) {
+            sc_eval(first_exp(exp), env);
+            exp = rest_exps(exp);
+        }
+        exp = first_exp(exp);
+        goto tailcall;
     } else if (is_application(exp)) {
         object *op, *args;
         prim_proc fn;
@@ -288,12 +308,7 @@ tailcall:
             env = extend_env(obj_lvp(op),
                              args,
                              obj_lve(op));
-            exp = obj_lvb(op);
-            while (!is_last_exp(exp)) {
-                sc_eval(first_exp(exp), env);
-                exp = rest_exps(exp);
-            }
-            exp = first_exp(exp);
+            exp = make_begin(obj_lvb(op));
             goto tailcall;
         } else {
             fprintf(stderr, "%s\n", "not applicable");

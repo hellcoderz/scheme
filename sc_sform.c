@@ -8,6 +8,7 @@ static object *g_define_symbol;
 static object *g_nrv_symbol; /* No Return Value symbol */
 static object *g_if_symbol;
 static object *g_lambda_symbol;
+static object *g_begin_symbol;
 
 #define DEFINE_SYMBOL(var, sym) \
 {                           \
@@ -26,6 +27,7 @@ int sform_init(void) {
     DEFINE_SYMBOL(g_nrv_symbol, "; no value returned");
     DEFINE_SYMBOL(g_if_symbol, "if");
     DEFINE_SYMBOL(g_lambda_symbol, "lambda");
+    DEFINE_SYMBOL(g_begin_symbol, "begin");
 
     return 0;
 }
@@ -52,5 +54,9 @@ object* get_if_symbol(void) {
 
 object* get_lambda_symbol(void) {
     return g_lambda_symbol;
+}
+
+object* get_begin_symbol(void) {
+    return g_begin_symbol;
 }
 

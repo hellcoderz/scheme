@@ -12,6 +12,8 @@ object* get_if_symbol(void);
 object* get_nrv_symbol(void);
 object* get_lambda_symbol(void);
 object* get_begin_symbol(void);
+object* get_cond_symbol(void);
+object* get_else_symbol(void);
 
 #endif
 

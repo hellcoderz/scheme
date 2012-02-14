@@ -93,8 +93,8 @@ static object* lambda_body(object *exp) {
     return cddr(exp);
 }
 
-static object* make_begin(object *exp) {
-    return cons(get_begin_symbol(), exp);
+static object* make_begin(object *seq) {
+    return cons(get_begin_symbol(), seq);
 }
 
 static int is_begin(object *exp) {
@@ -180,6 +180,15 @@ static object* eval_variable(object *exp, object *env) {
     return obj;
 }
 
+static object* make_if(object *predicate,
+                       object *consequence,
+                       object *alternative) {
+    return cons(get_if_symbol(),
+                cons(predicate,
+                    cons(consequence,
+                        cons(alternative, get_empty_list()))));
+}
+
 static int is_if(object *exp) {
     return is_tagged_list(exp, get_if_symbol());
 }
@@ -243,6 +252,77 @@ static object* list_of_values(object *ops, object *env) {
     }
 }
 
+static object* cond_clauses(object *exp) {
+    return cdr(exp);
+}
+
+static int is_cond(object *exp) {
+    return is_tagged_list(exp, get_cond_symbol());
+}
+
+static object* cond_predicate(object *clause) {
+    return car(clause);
+}
+
+static object* cond_actions(object *clause) {
+    return cdr(clause);
+}
+
+static int is_cond_else_clause(object *clause) {
+    return cond_predicate(clause) == get_else_symbol();
+}
+
+static object* sequence_to_exp(object *seq) {
+    if (is_empty_list(seq)) {
+        return seq;
+    } else if (is_last_exp(seq)) {
+        return car(seq);
+    } else {
+        return make_begin(seq);
+    }
+}
+
+static object* expand_clauses(object *clauses) {
+    object *first, *rest;
+
+    if (is_empty_list(clauses)) {
+        return get_false_obj();
+    } else {
+        first = car(clauses);
+        rest = cdr(clauses);
+        if (is_cond_else_clause(first)) {
+            if (is_empty_list(rest)) {
+                return sequence_to_exp(cond_actions(first));
+            } else {
+                fprintf(stderr,
+                        "else clause isn't last cond->if\n");
+                return NULL;
+            }
+        } else {
+            object *alter;
+            alter = expand_clauses(rest);
+            if (alter == NULL) {
+                return NULL;
+            } else {
+                return make_if(cond_predicate(first),
+                               sequence_to_exp(cond_actions(first)),
+                               alter);
+            }
+        }
+    }
+}
+
+static object* cond_to_if(object *exp) {
+    object *clauses;
+
+    clauses = cond_clauses(exp);
+    if (is_empty_list(clauses)) {
+        fprintf(stderr, "no clauses in cond form\n");
+        return NULL;
+    }
+    return expand_clauses(clauses);
+}
+
 object* sc_eval(object *exp, object *env) {
     object *val;
 
@@ -283,6 +363,12 @@ tailcall:
             exp = rest_exps(exp);
         }
         exp = first_exp(exp);
+        goto tailcall;
+    } else if (is_cond(exp)) {
+        exp = cond_to_if(exp);
+        if (exp == NULL) {
+            return NULL;
+        }
         goto tailcall;
     } else if (is_application(exp)) {
         object *op, *args;

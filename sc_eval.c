@@ -219,6 +219,10 @@ static int check_if_arity(object *exp) {
            is_empty_list(cddddr(exp));
 }
 
+static object* make_application(object *operator, object *operands) {
+    return cons(operator, operands);
+}
+
 static int is_application(object *exp) {
     return is_pair(exp);
 }
@@ -323,6 +327,117 @@ static object* cond_to_if(object *exp) {
     return expand_clauses(clauses);
 }
 
+static int is_let(object *exp) {
+    return is_tagged_list(exp, get_let_symbol());
+}
+
+static object* let_bindings(object *exp) {
+    return cadr(exp);
+}
+
+static object* let_body(object *exp) {
+    return cddr(exp);
+}
+
+static object* binding_variable(object *binding) {
+    return car(binding);
+}
+
+static object* binding_value(object *binding) {
+    return cadr(binding);
+}
+
+static int is_valid_binding(object *binding) {
+    return is_empty_list(cddr(binding));
+}
+
+static object* bindings_variables(object *bindings) {
+    if (is_empty_list(bindings)) {
+        return get_empty_list();
+    } else {
+        object *binding;
+        object *var, *rest;
+
+        binding = car(bindings);
+        if (!is_valid_binding(binding)) {
+            return NULL;
+        }
+        var = binding_variable(binding);
+        rest = bindings_variables(cdr(bindings));
+        if (rest == NULL) {
+            return NULL;
+        }
+        return cons(var, rest);
+    }
+}
+
+static object* bindings_values(object *bindings) {
+    if (is_empty_list(bindings)) {
+        return get_empty_list();
+    } else {
+        object *binding;
+        object *val, *rest;
+
+        binding = car(bindings);
+        if (!is_valid_binding(binding)) {
+            return NULL;
+        }
+        val = binding_value(binding);
+        rest = bindings_values(cdr(bindings));
+        if (rest == NULL) {
+            return NULL;
+        }
+        return cons(val, rest);
+    }
+}
+
+static int is_valid_let_bindings(object *bindings) {
+    return is_pair(bindings);
+}
+
+static object* let_variables(object *exp) {
+    object *bindings;
+
+    bindings = let_bindings(exp);
+    if (!is_valid_let_bindings(bindings)) {
+        return NULL;
+    }
+    return bindings_variables(bindings);
+}
+
+static object* let_values(object *exp) {
+    object *bindings;
+
+    bindings = let_bindings(exp);
+    if (!is_valid_let_bindings(bindings)) {
+        return NULL;
+    }
+    return bindings_values(bindings);
+}
+
+static object* let_to_application(object *exp) {
+    object *vars, *vals;
+    object *body;
+
+    vars = let_variables(exp);
+    if (vars == NULL) {
+        return NULL;
+    }
+    vals = let_values(exp);
+    if (vals == NULL) {
+        return NULL;
+    }
+    body = let_body(exp);
+    if (body == NULL || is_empty_list(body)) {
+        return NULL;
+    }
+    return make_application(
+                make_lambda(vars, body),
+                vals);
+}
+
+
+
 object* sc_eval(object *exp, object *env) {
     object *val;
 
@@ -367,6 +482,13 @@ tailcall:
     } else if (is_cond(exp)) {
         exp = cond_to_if(exp);
         if (exp == NULL) {
+            return NULL;
+        }
+        goto tailcall;
+    } else if (is_let(exp)) {
+        exp = let_to_application(exp);
+        if (exp == NULL) {
+            fprintf(stderr, "malformed let form\n");
             return NULL;
         }
         goto tailcall;

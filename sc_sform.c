@@ -11,6 +11,7 @@ static object *g_lambda_symbol;
 static object *g_begin_symbol;
 static object *g_cond_symbol;
 static object *g_else_symbol;
+static object *g_let_symbol;
 
 #define DEFINE_SYMBOL(var, sym) \
 {                           \
@@ -32,6 +33,7 @@ int sform_init(void) {
     DEFINE_SYMBOL(g_begin_symbol, "begin");
     DEFINE_SYMBOL(g_cond_symbol, "cond");
     DEFINE_SYMBOL(g_else_symbol, "else");
+    DEFINE_SYMBOL(g_let_symbol, "let");
 
     return 0;
 }
@@ -70,5 +72,9 @@ object* get_cond_symbol(void) {
 
 object* get_else_symbol(void) {
     return g_else_symbol;
+}
+
+object* get_let_symbol(void) {
+    return g_let_symbol;
 }
 

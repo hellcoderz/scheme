@@ -30,6 +30,8 @@ char* error_str(int err) {
             return "invalid parameter";
         case SC_E_DIV:
             return "divide by zero";
+        case SC_E_INV_STAT:
+            return "illegal state";
     }
     return NULL;
 }
@@ -736,6 +738,20 @@ static int exit_proc(object *params, object **result) {
     return 0;
 }
 
+static int apply_proc(object *params, object **result) {
+    /* handled specially in sc_eval for tail call.
+     *
+     * this function exists so that apply can be treated
+     * as normal function in Scheme code.
+     */
+    return SC_E_INV_STAT;
+}
+
+int is_apply(object *obj) {
+    return is_primitive_proc(obj) &&
+           obj_fv(obj) == apply_proc;
+}
+
 #define DEFINE_LIST_PROC(name) \
     define_proc(#name, name ## _proc)
 
@@ -805,6 +821,7 @@ int init_primitive(void) {
     define_proc("eq?", is_eq_proc);
 
     define_proc("exit", exit_proc);
+    define_proc("apply", apply_proc);
     return 0;
 }
 

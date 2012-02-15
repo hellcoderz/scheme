@@ -452,6 +452,35 @@ static object* or_tests(object *exp) {
     return cdr(exp);
 }
 
+static object* apply_operator(object *args) {
+    return car(args);
+}
+
+static object* normalize_apply_operands(object *args) {
+    if (is_empty_list(args)) {
+        return NULL;
+    }
+    if (is_empty_list(cdr(args))) {
+        object *obj;
+        obj = car(args);
+        if (is_empty_list(obj) || is_pair(obj)) {
+            return obj;
+        } else {
+            return cons(obj, get_empty_list());
+        }
+    } else {
+        return cons(car(args),
+                    normalize_apply_operands(cdr(args)));
+    }
+
+    /* never here */
+    return NULL;
+}
+
+static object* apply_operands(object *args) {
+    return normalize_apply_operands(cdr(args));
+}
+
 
 object* sc_eval(object *exp, object *env) {
     object *val;
@@ -545,6 +574,22 @@ tailcall:
 
         op = sc_eval(operator(exp), env);
         args = list_of_values(operands(exp), env);
+
+        /* handle apply specially for tailcall requirement */
+        if (is_apply(op)) {
+            char msg[] = "wrong arity in apply";
+            op = apply_operator(args);
+            if (op == NULL) {
+                fprintf(stderr, "%s\n", msg);
+                return NULL;
+            }
+            args = apply_operands(args);
+            if (args == NULL) {
+                fprintf(stderr, "%s\n", msg);
+                return NULL;
+            }
+        }
+
         if (is_primitive_proc(op)) {
             fn = obj_fv(op);
             if (fn == NULL) {

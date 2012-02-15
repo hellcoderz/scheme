@@ -11,9 +11,10 @@ enum {
     SC_E_INV_STAT,
 };
 
-int init_primitive(void);
+int init_primitive(object *env);
 char* error_str(int err);
 int is_apply(object *obj);
+int is_eval(object *obj);
 
 #endif
 

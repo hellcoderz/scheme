@@ -481,6 +481,27 @@ static object* apply_operands(object *args) {
     return normalize_apply_operands(cdr(args));
 }
 
+static object* eval_exps(object *args) {
+    return car(args);
+}
+
+static object* eval_env(object *args) {
+    object *env;
+
+    env = cadr(args);
+    if (env == NULL) {
+        fprintf(stderr, "%s\n",
+                "wrong arity in eval");
+        return NULL;
+    }
+    if (!is_valid_env(env)) {
+        fprintf(stderr, "%s\n",
+                "invalid environment");
+        return NULL;
+    }
+    return env;
+}
+
 
 object* sc_eval(object *exp, object *env) {
     object *val;
@@ -588,6 +609,21 @@ tailcall:
                 fprintf(stderr, "%s\n", msg);
                 return NULL;
             }
+        }
+
+        /* handle eval specially for tailcall requirement */
+        if (is_eval(op)) {
+            char msg[] = "wrong arity in eval";
+            exp = eval_exps(args);
+            if (exp == NULL) {
+                fprintf(stderr, "%s\n", msg);
+                return NULL;
+            }
+            env = eval_env(args);
+            if (env == NULL) {
+                return NULL;
+            }
+            goto tailcall;
         }
 
         if (is_primitive_proc(op)) {

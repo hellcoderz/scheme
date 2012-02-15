@@ -8,6 +8,16 @@
 #include "sc_env.h"
 
 static int keep_run = 1;
+static object *global_env;
+
+static int init(void) {
+    global_env = make_base_env();
+    if (global_env == NULL) {
+        return -1;
+    }
+
+    return 0;
+}
 
 int sc_repl(void) {
     object *exp, *val;
@@ -15,7 +25,12 @@ int sc_repl(void) {
     int err_cnt = 0;
     FILE *in;
 
+    if (init() != 0) {
+        return -1;
+    }
+
     in = stdin;
+    printf("%s", WELCOME_STR);
     while (keep_run) {
         if (err_cnt > 0) {
             printf("%d%s", err_cnt, PROMPT);
@@ -33,7 +48,7 @@ int sc_repl(void) {
             continue;
         }
 
-        val = sc_eval(exp, get_global_env());
+        val = sc_eval(exp, global_env);
         if (val == NULL) {
             err_cnt++;
             continue;
@@ -51,5 +66,9 @@ int sc_repl(void) {
 
 void repl_exit(void) {
     keep_run = 0;
+}
+
+object* get_repl_env(void) {
+    return global_env;
 }
 

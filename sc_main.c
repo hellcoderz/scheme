@@ -1,35 +1,35 @@
 #include <stdio.h>
-#include "sc_config.h"
-#include "sc_object.h"
 #include "sc_repl.h"
-#include "sc_procdef.h"
-
-static int init(void) {
-    if (init_obj() != 0) {
-       return -1;
-    }
-    if (init_primitive() != 0) {
-        return -1;
-    }
-
-    return 0;
-}
+#include "sc_object.h"
 
 static void dispose(void) {
     dispose_obj();
 }
 
+static int init(void) {
+    int ret;
+
+    ret = init_obj();
+    if (ret != 0) {
+        return ret;
+    }
+    return 0;
+}
+
 int main(int argc, char **argv) {
     int ret;
 
-    if (init() != 0) {
-        return -1;
+    ret = init();
+    if (ret != 0) {
+        fprintf(stderr, "%s\n",
+                "failed to intialize object system");
+        return ret;
     }
 
-    printf("%s", WELCOME_STR);
-
     ret = sc_repl();
+
     dispose();
+
     return ret;
 }
 

@@ -1,6 +1,5 @@
 #include "sc_object.h"
 #include "sc_sform.h"
-#include "sc_env.h"
 
 int init_obj(void) {
     int ret;
@@ -29,8 +28,6 @@ int init_obj(void) {
     if (ret != 0) {
         return ret;
     }
-
-    ret = setup_env();
     return ret;
 }
 

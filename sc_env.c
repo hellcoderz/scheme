@@ -1,8 +1,8 @@
 #include <stddef.h>
 #include "sc_object.h"
 #include "sc_env.h"
+#include "sc_procdef.h"
 
-static object *g_empty_env, *g_global_env;
 
 static object* first_frame(object *env) {
     return car(env);
@@ -87,16 +87,43 @@ int define_variable(object *var, object *val, object *env) {
     return add_binding_to_frame(var, val, frame);
 }
 
-int setup_env(void) {
+object* make_null_env(void) {
     object *e;
+    object *env;
 
     e = get_empty_list();
-    g_empty_env = e;
-    g_global_env = extend_env(e, e, g_empty_env);
-    return 0;
+    env = extend_env(e, e, e);
+    return env;
 }
 
-object* get_global_env(void) {
-    return g_global_env;
+object* make_base_env(void) {
+    object *env;
+
+    env = make_null_env();
+    init_primitive(env);
+    return env;
+}
+
+int is_valid_env(object *env) {
+    object *frame;
+    object *vars, *vals;
+
+    if (!is_pair(env)) {
+        return 0;
+    }
+    frame = first_frame(env);
+    if (!is_pair(frame)) {
+        return 0;
+    }
+
+    vars = frame_vars(frame);
+    if (!is_empty_list(vars) && !is_pair(vars)) {
+        return 0;
+    }
+    vals = frame_vals(frame);
+    if (!is_empty_list(vals) && !is_pair(vals)) {
+        return 0;
+    }
+    return 1;
 }
 

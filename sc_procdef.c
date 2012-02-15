@@ -8,12 +8,12 @@
 #include "sc_sform.h"
 #include "sc_repl.h"
 
-static int define_proc(char *sym, prim_proc fn) {
+static int env_define_proc(char *sym, prim_proc fn, object *env) {
     object *sym_obj, *proc_obj;
 
     sym_obj = make_symbol(sym);
     proc_obj = make_primitive_proc(fn);
-    return define_variable(sym_obj, proc_obj, get_global_env());
+    return define_variable(sym_obj, proc_obj, env);
 }
 
 char* error_str(int err) {
@@ -752,10 +752,60 @@ int is_apply(object *obj) {
            obj_fv(obj) == apply_proc;
 }
 
+static int eval_proc(object *params, object **result) {
+    /* handled specially in sc_eval for tail call.
+     *
+     * this function exists so that eval can be treated
+     * as normal function in Scheme code.
+     */
+    return SC_E_INV_STAT;
+}
+
+int is_eval(object *obj) {
+    return is_primitive_proc(obj) &&
+           obj_fv(obj) == eval_proc;
+}
+
+static int interaction_environment_proc(object *params, object **result) {
+    if (!is_empty_list(params)) {
+        return SC_E_ARITY;
+    }
+    if (result == NULL) {
+        return SC_E_NULL;
+    }
+    *result = get_repl_env();
+    return 0;
+}
+
+static int null_environment_proc(object *params, object **result) {
+    if (result == NULL) {
+        return SC_E_NULL;
+    }
+    if (!is_empty_list(params)) {
+        return SC_E_ARITY;
+    }
+    *result = make_null_env();
+    return 0;
+}
+
+static int base_environment_proc(object *params, object **result) {
+    if (result == NULL) {
+        return SC_E_NULL;
+    }
+    if (!is_empty_list(params)) {
+        return SC_E_ARITY;
+    }
+    *result = make_base_env();
+    return 0;
+}
+
 #define DEFINE_LIST_PROC(name) \
     define_proc(#name, name ## _proc)
 
-int init_primitive(void) {
+#define define_proc(x, y) \
+    env_define_proc(x, y, env)
+
+int init_primitive(object *env) {
     define_proc("null?", is_null_proc);
     define_proc("boolean?", is_boolean_proc);
     define_proc("symbol?", is_symbol_proc);
@@ -821,6 +871,11 @@ int init_primitive(void) {
     define_proc("eq?", is_eq_proc);
 
     define_proc("exit", exit_proc);
+    
+    define_proc("interaction-environment", interaction_environment_proc);
+    define_proc("null-environment", null_environment_proc);
+    define_proc("base-environment", base_environment_proc);
+    define_proc("eval", eval_proc);
     define_proc("apply", apply_proc);
     return 0;
 }

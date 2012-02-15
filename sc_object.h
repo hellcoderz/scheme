@@ -1,6 +1,8 @@
 #ifndef _SC_OBJECT_H_
 #define _SC_OBJECT_H_
 
+#include <stdio.h>
+
 #define NUL '\0'
 #define TAB '\t'
 #define LINEFEED '\n'
@@ -18,6 +20,9 @@ typedef enum {
     SYMBOL,
     PRIMITIVE_PROC,
     COMPOUND_PROC,
+    INPUT_PORT,
+    OUTPUT_PORT,
+    EOF_OBJECT,
 } object_type;
 
 struct object;
@@ -54,6 +59,12 @@ typedef struct object {
             struct object *body;
             struct object *env;
         } compound_proc;
+        struct {
+            FILE *stream;
+        } input_port;
+        struct {
+            FILE *stream;
+        } output_port;
     } data;
 } object;
 
@@ -69,6 +80,8 @@ typedef struct object {
 #define obj_lvp(p) (obj_lv(p).parameters)
 #define obj_lvb(p) (obj_lv(p).body)
 #define obj_lve(p) (obj_lv(p).env)
+#define obj_ipv(p) (p->data.input_port.stream)
+#define obj_opv(p) (p->data.output_port.stream)
 
 
 #define caar(obj)   car(car(obj))
@@ -143,6 +156,16 @@ int is_primitive_proc(object *obj);
 
 object* make_compound_proc(object *params, object *body, object *env);
 int is_compound_proc(object *obj);
+
+object* get_eof_object(void);
+int is_eof_object(object *obj);
+int eof_init(void);
+
+object* make_input_port(FILE *stream);
+int is_input_port(object *obj);
+
+object* make_output_port(FILE *stream);
+int is_output_port(object *obj);
 
 #endif
 

@@ -456,6 +456,8 @@ object* sc_read(FILE *in) {
         obj = parse_symbol(in);
     } else if (is_quote_start(c)) {
         obj = parse_quote_form(in);
+    } else if (c == EOF) {
+        obj = get_eof_object();
     } else {
         fprintf(stderr, "bad input, at `%c\n", c);
         obj = NULL;

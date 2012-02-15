@@ -23,13 +23,14 @@ int sc_repl(void) {
     object *exp, *val;
     int ret = 0;
     int err_cnt = 0;
-    FILE *in;
+    FILE *in, *out;
 
     if (init() != 0) {
         return -1;
     }
 
     in = stdin;
+    out = stdout;
     printf("%s", WELCOME_STR);
     while (keep_run) {
         if (err_cnt > 0) {
@@ -40,12 +41,11 @@ int sc_repl(void) {
 
         exp = sc_read(in);
         if (exp == NULL) {
-            if (feof(in)) {
-                break;
-            }
-
             err_cnt++;
             continue;
+        }
+        if (is_eof_object(exp)) {
+            break;
         }
 
         val = sc_eval(exp, global_env);
@@ -54,7 +54,7 @@ int sc_repl(void) {
             continue;
         }
 
-        ret = sc_write(val);
+        ret = sc_write(out, val);
         printf("\n");
         if (ret != 0) {
             break;

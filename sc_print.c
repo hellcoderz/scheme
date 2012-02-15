@@ -4,34 +4,29 @@
 #include "sc_print.h"
 #include "sc_log.h"
 
-static int write_character(object *val) {
+static int write_character(FILE *out, object *val) {
     char v = obj_cv(val);
     
-    printf("%s", "#\\");
+    fprintf(out, "%s", "#\\");
     switch (v) {
         case NUL:
-            printf("%s", "nul");
+            fprintf(out, "%s", "nul");
             break;
-
         case TAB:
-            printf("%s", "tab");
+            fprintf(out, "%s", "tab");
             break;
-
         /* LINEFEED is equal to NEWLINE */
         case NEWLINE:
-            printf("%s", "newline");
+            fprintf(out, "%s", "newline");
             break;
-
         case RETURN:
-            printf("%s", "return");
+            fprintf(out, "%s", "return");
             break;
-
         case SPACE:
-            printf("%s", "space");
+            fprintf(out, "%s", "space");
             break;
-
         default:
-            printf("%c", v);
+            fprintf(out, "%c", v);
             if (!isgraph(v)) {
                 char msg[64];
                 sprintf(msg, "character not printable `%d\n", v);
@@ -42,70 +37,70 @@ static int write_character(object *val) {
     return 0;
 }
 
-static int write_string(object *val) {
+static int write_string(FILE *out, object *val) {
     char *str = obj_sv(val);
 
-    fputc('"', stdout);
+    fputc('"', out);
     while (*str != '\0') {
        switch (*str) {
            case '\a':
-               printf("%s", "\\a");
+               fprintf(out, "%s", "\\a");
                break;
            case '\b':
-               printf("%s", "\\b");
+               fprintf(out, "%s", "\\b");
                break;
            case '\t':
-               printf("%s", "\\t");
+               fprintf(out, "%s", "\\t");
                break;
            case '\n':
-               printf("%s", "\\n");
+               fprintf(out, "%s", "\\n");
                break;
            case '\v':
-               printf("%s", "\\v");
+               fprintf(out, "%s", "\\v");
                break;
            case '\f':
-               printf("%s", "\\f");
+               fprintf(out, "%s", "\\f");
                break;
            case '\r':
-               printf("%s", "\\r");
+               fprintf(out, "%s", "\\r");
                break;
            case '"':
-               printf("%s", "\\\"");
+               fprintf(out, "%s", "\\\"");
                break;
            case '\\':
-               printf("%s", "\\\\");
+               fprintf(out, "%s", "\\\\");
                break;
            default:
-               fputc(*str, stdout);
+               fputc(*str, out);
                break;
        }
        str++;
     }
-    fputc('"', stdout);
+    fputc('"', out);
 
     return 0;
 }
 
-static int write_pair(object *val) {
+static int write_pair(FILE *out, object *val) {
     object *car_obj, *cdr_obj;
 
     car_obj = car(val);
     cdr_obj = cdr(val);
 
-    sc_write(car_obj);
+    sc_write(out, car_obj);
     if (is_pair(cdr_obj)) {
-        printf(" ");
-        write_pair(cdr_obj);
+        fprintf(out, " ");
+        write_pair(out, cdr_obj);
     } else if (is_empty_list(cdr_obj)) {
         return 0;
     } else {
-        printf(" . ");
-        sc_write(cdr_obj);
+        fprintf(out, " . ");
+        sc_write(out, cdr_obj);
     }
     return 0;
 }
 
-int sc_write(object *val) {
+int sc_write(FILE *out, object *val) {
     int ret = 0;
 
     if (val == NULL) {
@@ -114,24 +109,30 @@ int sc_write(object *val) {
     }
 
     if (is_fixnum(val)) {
-        printf("%ld", obj_nv(val));
+        fprintf(out, "%ld", obj_nv(val));
     } else if (is_boolean(val)) {
         char v = is_true(val) ? 't' : 'f';
-        printf("#%c", v);
+        fprintf(out, "#%c", v);
     } else if (is_character(val)) {
-        ret = write_character(val);
+        ret = write_character(out, val);
     } else if (is_string(val)) {
-        ret = write_string(val);
+        ret = write_string(out, val);
     } else if (is_empty_list(val)) {
-        printf("%s", "()");
+        fprintf(out, "%s", "()");
     } else if (is_pair(val)) {
-        printf("(");
-        ret = write_pair(val);
-        printf(")");
+        fprintf(out, "(");
+        ret = write_pair(out, val);
+        fprintf(out, ")");
     } else if (is_symbol(val)) {
-        printf("%s", obj_iv(val));
+        fprintf(out, "%s", obj_iv(val));
     } else if (is_compound_proc(val) || is_primitive_proc(val)) {
-        printf("#<procedure@%p>", val);
+        fprintf(out, "#<procedure@%p>", val);
+    } else if (is_eof_object(val)) {
+        fprintf(out, "%s", "#<eof>");
+    } else if (is_input_port(val)) {
+        fprintf(out, "#<input-port@%p>", val);
+    } else if (is_output_port(val)) {
+        fprintf(out, "#<output-port@%p>", val);
     } else {
         fprintf(stderr,
                 "unknown type, cannot print\n");

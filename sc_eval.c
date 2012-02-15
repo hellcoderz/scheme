@@ -10,7 +10,8 @@ static int is_self_evaluate(object *exp) {
     return is_fixnum(exp) ||
            is_boolean(exp) ||
            is_character(exp) ||
-           is_string(exp);
+           is_string(exp) ||
+           is_eof_object(exp);
 }
 
 static int is_variable(object *exp) {
@@ -174,8 +175,8 @@ static object* eval_variable(object *exp, object *env) {
 
     obj = lookup_variable_val(exp, env);
     if (obj == NULL) {
-        fprintf(stderr, "%s\n",
-                "unbound variable");
+        fprintf(stderr, "%s `%s\n",
+                "unbound variable", obj_iv(exp));
     }
     return obj;
 }
@@ -645,7 +646,7 @@ tailcall:
             exp = make_begin(obj_lvb(op));
             goto tailcall;
         } else {
-            fprintf(stderr, "%s\n", "not applicable");
+            fprintf(stderr, "%s\n", "object not applicable");
             return NULL;
         }
     } else {

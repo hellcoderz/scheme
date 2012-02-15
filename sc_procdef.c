@@ -7,8 +7,9 @@
 #include "sc_env.h"
 #include "sc_sform.h"
 #include "sc_repl.h"
+#include "sc_ioproc.h"
 
-static int env_define_proc(char *sym, prim_proc fn, object *env) {
+int env_define_proc(char *sym, prim_proc fn, object *env) {
     object *sym_obj, *proc_obj;
 
     sym_obj = make_symbol(sym);
@@ -32,6 +33,16 @@ char* error_str(int err) {
             return "divide by zero";
         case SC_E_INV_STAT:
             return "illegal state";
+        case SC_E_IO_OPEN:
+            return "error while opening file";
+        case SC_E_LOAD:
+            return "syntax error while loading source file";
+        case SC_E_IO_CLOSE:
+            return "error while closing file";
+        case SC_E_IO_READ:
+            return "error while reading file";
+        case SC_E_IO_INVL_PORT:
+            return "invalid I/O port";
     }
     return NULL;
 }
@@ -806,6 +817,8 @@ static int base_environment_proc(object *params, object **result) {
     env_define_proc(x, y, env)
 
 int init_primitive(object *env) {
+    int ret;
+
     define_proc("null?", is_null_proc);
     define_proc("boolean?", is_boolean_proc);
     define_proc("symbol?", is_symbol_proc);
@@ -877,6 +890,9 @@ int init_primitive(object *env) {
     define_proc("base-environment", base_environment_proc);
     define_proc("eval", eval_proc);
     define_proc("apply", apply_proc);
-    return 0;
+
+
+    ret = init_io_primitive(env);
+    return ret;
 }
 

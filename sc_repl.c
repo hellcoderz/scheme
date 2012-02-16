@@ -10,9 +10,43 @@
 static int keep_run = 1;
 static object *global_env;
 
+static int load_core_lib(void) {
+    char filename[] = "./lib/core.scm";
+    FILE *in;
+    object *exp;
+
+    in = fopen(filename, "r");
+    if (in == NULL) {
+        return -1;
+    }
+    for (;;) {
+        exp = sc_read(in);
+        if (exp == NULL) {
+            fclose(in);
+            return -1;
+        }
+        if (is_eof_object(exp)) {
+            break;
+        }
+
+        exp = sc_eval(exp, global_env);
+        if (exp == NULL) {
+            fclose(in);
+            return -1;
+        }
+    }
+    fclose(in);
+    return 0;
+}
+
 static int init(void) {
     global_env = make_base_env();
     if (global_env == NULL) {
+        return -1;
+    }
+
+    if (load_core_lib() != 0) {
+        fprintf(stderr, "failed to load core lib\n");
         return -1;
     }
 

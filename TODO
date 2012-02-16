@@ -1,0 +1,11 @@
+rename files, remove "sc_" prefix
+add string functions
+add gc support
+improve core lib
+add cache for integer objects
+add floating point support
+
+
+may or may not do:
+add macro support
+add call/cc

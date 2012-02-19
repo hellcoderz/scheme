@@ -1,0 +1,83 @@
+SC Scheme garbage collector
+
+1. modify object struct
+add two fields: char mark, struct object *chain
+mark has two valid values: ACTIVE, FREE
+chain is used to maintain a list of free/active objects
+
+2. heap size
+heap is initialized once during startup, heap size can be set
+via main argument(-m xxM). 
+heap is divided into segments, each segment has 1024 objects.
+after adding two fields to object struct, each struct is 24B.
+a segment is 24B * 1024=24KB. heap size is a multiple of segment
+size, this may require a round operation.
+Default heap size is 42 * 24KB * 8, containing a total of
+42 * 1024 * 8 = 336K objects.
+
+3. heap management
+Heap handles objects in segment size to free_list. Free list is
+initialized to have only one segment of objects(1024).
+If free_list has 256 objects, a new segment is requested
+from heap. When heap has no more segments, free_list has less than
+256 objects and no more request is handled to heap.
+
+4. heap structure
+struct heap {
+    object *segments; /* a list containing all segments in heap */
+    int seg_size; /* total number of segments in heap */
+    int used; /* number of used segments in heap */
+}
+segments is removed from front.
+there is no segment structure.
+
+5. free/active list
+free list contains all objects currently available, active list contains
+all objects currently allocated. Both lists use the chain field of
+object struct to form a single linked list.
+
+6. memory allocation operations
+alloc_object:
+a. if free_list is > 256:
+    remove head from free_list
+    add that object to active_list
+    memset to 0s
+    return that object
+b. else if free_list is = 256:
+    call gc
+    if free_list is <= 300:
+        get more segments from heap
+    else:
+        goto step a
+   else:
+        goto step a
+        if no memory, error and exit
+
+7. garbage collection
+use mark-sweep algrithom
+mark:
+start from root objects mark each reachable objects as ACTIVE
+sweep:
+for each object in active list, if object is ACTIVE mark it as
+FREE for next gc; otherwise move object to free_list
+the tricky part is root objects management. we have two parts.
+global environment and in-use local object in c function stack.
+global environment is trivia to maitain, but maitaining local
+root objects is pretty ugly.
+We use a stack to maintain local root objects, whenever a 
+alloc_object is called in c function, we protect it with a pair
+of push/pop to the root_stack.
+struct stack {
+    object **elems[];
+    int capacity;
+    int size;
+}
+elems is an array, stack can be grow by calling realloc. stack
+won't shink.
+
+8. review every function
+If a C function contains an alloc_call derectly or indrectly,
+protect that allocation call.
+
+
+

@@ -18,7 +18,10 @@ int is_empty_list(object *obj) {
 int empty_list_init() {
     object *p;
 
-    p = alloc_object();
+    p = sc_malloc(sizeof(object));
+    if (p == NULL) {
+        return -1;
+    }
     memset(p, 0, sizeof(object));
     type(p) = THE_EMPTY_LIST;
     g_the_empty_list = p;

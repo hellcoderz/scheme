@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "object.h"
 #include "mem.h"
 
@@ -25,5 +26,21 @@ object* make_output_port(FILE *stream) {
 
 int is_output_port(object *obj) {
     return obj != NULL && type(obj) == OUTPUT_PORT;
+}
+
+void port_free(object *port) {
+    FILE *stream;
+
+    if (is_input_port(port)) {
+        stream = obj_ipv(port);
+    } else if (is_output_port(port)) {
+        stream = obj_opv(port);
+    } else {
+        return;
+    }
+
+    if (stream != NULL) {
+        fclose(stream);
+    }
 }
 

@@ -4,7 +4,10 @@
 #include "log.h"
 
 #define INIT_BOOLEAN(p, v) \
-    p = alloc_object(); \
+    p = sc_malloc(sizeof(object)); \
+    if (p == NULL) { \
+        return -1; \
+    } \
     obj_bv(p) = v; \
     type(p) = BOOLEAN;
 

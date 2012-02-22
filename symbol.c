@@ -49,3 +49,15 @@ void symbol_dispose(void) {
     hashtbl_dispose(symbols);
 }
 
+void symbol_free(object *obj) {
+    char *sym;
+
+    if (obj == NULL) {
+        return;
+    }
+
+    sym = obj_iv(obj);
+    hashtbl_remove(symbols, obj, sym);
+    sc_free(sym);
+}
+

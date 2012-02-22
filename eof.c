@@ -15,7 +15,10 @@ int is_eof_object(object *obj) {
 int eof_init(void) {
     object *obj;
 
-    obj = alloc_object();
+    obj = sc_malloc(sizeof(object));
+    if (obj == NULL) {
+        return -1;
+    }
     memset(obj, 0, sizeof(object));
     type(obj) = EOF_OBJECT;
     eof_obj = obj;

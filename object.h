@@ -29,7 +29,13 @@ struct object;
 typedef int (*prim_proc)(struct object *params, 
                          struct object **result);
 
+typedef struct gc_head {
+    int mark;
+    struct object *chain;
+} gc_head;
+
 typedef struct object {
+    gc_head gc;
     object_type type;
     union {
         struct {
@@ -82,6 +88,10 @@ typedef struct object {
 #define obj_lve(p) (obj_lv(p).env)
 #define obj_ipv(p) (p->data.input_port.stream)
 #define obj_opv(p) (p->data.output_port.stream)
+#define gc_mark(p) ((p)->gc.mark)
+#define gc_chain(p) ((p)->gc.chain)
+
+#define SIZEOF_OBJECT   sizeof(object)
 
 
 #define caar(obj)   car(car(obj))
@@ -134,6 +144,7 @@ object* make_string(char *str);
 int is_string(object *obj);
 int string_init(void);
 void string_dispose(void);
+void string_free(object *obj);
 
 object* get_empty_list();
 int is_empty_list(object *obj);
@@ -150,6 +161,7 @@ object* make_symbol(char *sym);
 int is_symbol(object *obj);
 int symbol_init();
 void symbol_dispose(void);
+void symbol_free(object *obj);
 
 object* make_primitive_proc(prim_proc fn);
 int is_primitive_proc(object *obj);
@@ -163,9 +175,9 @@ int eof_init(void);
 
 object* make_input_port(FILE *stream);
 int is_input_port(object *obj);
-
 object* make_output_port(FILE *stream);
 int is_output_port(object *obj);
+void port_free(object *obj);
 
 #endif
 

@@ -12,6 +12,7 @@ typedef struct hashtbl {
 hashtbl* hashtbl_new(create_fn fn);
 void hashtbl_dispose(hashtbl *tbl);
 object* hashtbl_insert(hashtbl *tbl, char *sym);
+void hashtbl_remove(hashtbl *tbl, object *obj, char *sym);
 
 #endif
 

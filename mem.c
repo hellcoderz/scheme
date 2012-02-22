@@ -1,6 +1,8 @@
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include "mem.h"
-#include "log.h"
+#include "gc.h"
 
 void* sc_malloc(size_t size) {
     return malloc(size);
@@ -14,14 +16,19 @@ void* sc_realloc(void *ptr, size_t size) {
     return realloc(ptr, size);
 }
 
+static void error(char *msg) {
+    fprintf(stderr, "%s\n", msg);
+    exit(-1);
+}
+
 object* alloc_object(void) {
     object *obj;
 
-    obj = sc_malloc(sizeof(object));
+    obj = gc_alloc();
     if (obj == NULL) {
-        sc_log("out of memory");
-        exit(1);
+        error("not enough memory for object");
     }
+    memset(obj, 0, sizeof(object));
     return obj;
 }
 

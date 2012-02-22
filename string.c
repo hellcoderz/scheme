@@ -51,3 +51,15 @@ int is_string(object *obj) {
     return obj != NULL && type(obj) == STRING;
 }
 
+void string_free(object *obj) {
+    char *str;
+
+    if (obj == NULL) {
+        return;
+    }
+
+    str = obj_sv(obj);
+    hashtbl_remove(g_strtbl, obj, str);
+    sc_free(str);
+}
+

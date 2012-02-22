@@ -1,0 +1,367 @@
+#include <stdio.h>
+#include "object.h"
+#include "gc.h"
+#include "gc_config.h"
+#include "repl.h"
+#include "stack.h"
+#include "log.h"
+#include "mem.h"
+
+static gc_heap heap;
+static gc_list free_list, active_list;
+static int heap_empty = 0;
+static stack *stack_root;
+
+#define ACTIVE  1
+#define FREE    0
+
+#define mark_active(p) \
+    gc_mark(p) = ACTIVE
+#define mark_free(p) \
+    gc_mark(p) = FREE
+#define is_active(p) \
+    gc_mark(p) == ACTIVE
+#define is_free(p) \
+    gc_mark(p) == FREE
+
+static void dump_object(object *obj) {
+    if (obj == NULL) {
+        return;
+    }
+    switch (type(obj)) {
+        case FIXNUM:
+            fprintf(stderr, "fixnum@%p<%ld>\n",
+                    obj, obj_nv(obj));
+            break;
+        case CHARACTER:
+            fprintf(stderr, "character@%p<%c>\n",
+                    obj, obj_cv(obj));
+            break;
+        case BOOLEAN:
+            fprintf(stderr, "boolean@%p<%s>\n",
+                    obj, is_false(obj) ? "false" : "true");
+            break;
+        case STRING:
+            fprintf(stderr, "string@%p<%s>\n",
+                    obj, obj_sv(obj));
+            break;
+        case SYMBOL:
+            fprintf(stderr, "symbol@%p<%s>\n",
+                    obj, obj_iv(obj));
+            break;
+        case PAIR:
+            fprintf(stderr, "pair@%p<car=%p,cdr=%p>\n",
+                    obj, car(obj), cdr(obj));
+            break;
+        case THE_EMPTY_LIST:
+            fprintf(stderr, "empty list@%p\n", obj);
+            break;
+        case PRIMITIVE_PROC:
+            fprintf(stderr, "primitive proc@%p<fn=%p>\n",
+                    obj, obj_fv(obj));
+            break;
+        case COMPOUND_PROC:
+            fprintf(stderr, "compound proc@%p<p=%p,b=%p,e=%p>\n",
+                    obj, obj_lvp(obj), obj_lvb(obj), obj_lve(obj));
+            break;
+        case INPUT_PORT:
+            fprintf(stderr, "input port@%p<file=%p>\n",
+                    obj, obj_ipv(obj));
+            break;
+        case OUTPUT_PORT:
+            fprintf(stderr, "output port@%p<file=%p>\n",
+                    obj, obj_opv(obj));
+            break;
+        default:
+            break;
+    }
+}
+
+static void dump_gc_summary(void) {
+    fprintf(stderr, "------------>gc summary<-------------\n");
+    fprintf(stderr, "heap: base=%p, total=%d, used=%d\n",
+            heap.segments, heap.seg_total, heap.seg_used);
+    fprintf(stderr, "# of objects in freelist=%d\n",
+            free_list.size);
+    fprintf(stderr, "# of objects in activelist=%d\n",
+            active_list.size);
+    fprintf(stderr, "-------------------------------------\n");
+}
+
+static int heap_init(int heap_size) {
+   object *p;
+   int size = (heap_size < DEFAULT_HEAP_SIZE) ?
+                DEFAULT_HEAP_SIZE : heap_size;
+
+   p = sc_malloc(size * SEGMENT_SIZE * sizeof(object));
+   if (p == NULL) {
+       return -1;
+   }
+   heap.segments = p;
+   heap.seg_total = size;
+   heap.seg_used = 0;
+
+   return 0;
+}
+
+/* call sc_free to free returned segment object */
+static gc_segment* seg_setup(object *seg) {
+    object *p = seg;
+    object *q = seg + SEGMENT_SIZE - 1;
+    gc_segment *ret;
+
+    ret = sc_malloc(sizeof(gc_segment));
+    if (ret == NULL) {
+        return NULL;
+    }
+
+    for (; p < q; p++) {
+        gc_chain(p) = p + 1;
+    }
+    gc_chain(p) = NULL;
+    ret->start = seg;
+    ret->end = p;
+
+    return ret;
+}
+
+static gc_segment* heap_alloc(void) {
+    object *seg = NULL;
+    int i = heap.seg_used;
+
+    if (heap_empty) {
+        return NULL;
+    }
+
+    if (i < heap.seg_total) {
+        seg = &heap.segments[i * SEGMENT_SIZE];
+        heap.seg_used++;
+    }
+    if (seg == NULL) {
+        heap_empty = 1;
+        return NULL;
+    }
+    
+    return seg_setup(seg);
+}
+
+#define INIT_GC_LIST(list) \
+    gc_chain(&(list.head)) = NULL; \
+    list.size = 0;
+
+static void lists_init(void) {
+    INIT_GC_LIST(free_list);
+    INIT_GC_LIST(active_list);
+}
+
+static int extend_freelist(void) {
+    object *head = &(free_list.head);
+    gc_segment *seg;
+
+    seg = heap_alloc();
+    if (seg == NULL) {
+        return -1;
+    }
+    gc_chain(seg->end) = gc_chain(head);
+    gc_chain(head) = seg->start;
+    sc_free(seg);
+    free_list.size += SEGMENT_SIZE;
+    return 0;
+}
+
+static int gc_list_is_empty(gc_list *list) {
+    object *head = &(list->head);
+    return gc_chain(head) == NULL;
+}
+
+static object* gc_list_remove_front(gc_list *list) {
+    object *head = &(list->head);
+    object *front = gc_chain(head);
+
+    gc_chain(head) = gc_chain(front);
+    list->size = list->size - 1;
+    return front;
+}
+
+static void gc_list_insert_front(gc_list *list, object *obj) {
+    object *head = &(list->head);
+
+    gc_chain(obj) = gc_chain(head);
+    gc_chain(head) = obj;
+    list->size = list->size + 1;
+}
+
+#define list_is_empty(list) \
+    gc_list_is_empty(&list)
+#define list_remove_front(list) \
+    gc_list_remove_front(&list)
+#define list_insert_front(list, obj) \
+    gc_list_insert_front(&list, obj)
+
+
+static object* gc_safe_alloc(void) {
+    object *obj;
+
+    if (list_is_empty(free_list)) {
+        return NULL;
+    }
+    obj = list_remove_front(free_list);
+    list_insert_front(active_list, obj);
+    return obj;
+}
+
+object* gc_alloc(void) {
+    int n = free_list.size;
+    object *obj;
+
+    if (n == GC_THRESHOLD) {
+        gc();
+        n = free_list.size;
+        if (n <= EXTEND_THRESHOLD) {
+            extend_freelist();
+        }
+    }
+
+    obj = gc_safe_alloc();
+    return obj;
+}
+
+static void gc_free(object *obj) {
+    if (obj == NULL) {
+        sc_log("gc_free got NULL argument\n");
+        return;
+    }
+
+    dump_object(obj);
+
+    list_insert_front(free_list, obj);
+    /* do object specific free */
+    switch (type(obj)) {
+        case STRING:
+            string_free(obj);
+            break;
+        case SYMBOL:
+            symbol_free(obj);
+            break;
+        case INPUT_PORT:
+        case OUTPUT_PORT:
+            port_free(obj);
+            break;
+        default:
+            break;
+    }
+}
+
+static void mark_object(object *obj) {
+tailcall:
+    if (obj == NULL) {
+        return;
+    }
+    
+    /* skip marked objects
+     * environment will recur */
+    if (is_active(obj)) {
+        return;
+    }
+
+    /* do not mark boolean, empty_list, eof */
+    if (is_boolean(obj) || is_empty_list(obj) || is_eof_object(obj)) {
+        return;
+    }
+
+    mark_active(obj);
+    /* pairs and compound procedures have nested objects */
+    if (is_pair(obj)) {
+        object *car_obj, *cdr_obj;
+        car_obj = car(obj);
+        cdr_obj = cdr(obj);
+        mark_object(car_obj);
+        obj = cdr_obj;
+        goto tailcall;
+    }
+    if (is_compound_proc(obj)) {
+        object *params = obj_lvp(obj);
+        object *body = obj_lvb(obj);
+        object *env = obj_lve(obj);
+        mark_object(params);
+        mark_object(body);
+        obj = env;
+        goto tailcall;
+    }
+}
+
+static void mark_stack_root(stack_elem elem) {
+    mark_object(*(object**)elem);
+}
+
+static void mark(void) {
+    object *env;
+
+    fprintf(stderr, "mark start\n");
+    env = get_repl_env();
+    mark_object(env);
+
+    stack_for_each(stack_root, mark_stack_root);
+    fprintf(stderr, "mark finished\n");
+}
+
+
+static void sweep(void) {
+    object *head = &(active_list.head);
+    object *prev, *curr, *next;
+
+    fprintf(stderr,"sweep start\n");
+    prev = head;
+    curr = gc_chain(head);
+    while (curr != NULL) {
+        if (is_active(curr)) {
+            mark_free(curr);
+            prev = curr;
+            curr = gc_chain(curr);
+        } else {
+            next = gc_chain(curr);
+            gc_chain(prev) = next;
+            active_list.size--;
+            gc_free(curr);
+            curr = next;
+        }
+    }
+    fprintf(stderr, "sweep finished\n");
+}
+
+
+void gc(void) {
+    fprintf(stderr, "gc start\n");
+    dump_gc_summary();
+    mark();
+    sweep();
+    dump_gc_summary();
+    fprintf(stderr, "gc finished\n");
+}
+
+
+/* heap_size: number of segments */
+int gc_init(int heap_size) {
+    int ret;
+
+    ret = heap_init(heap_size);
+    if (ret != 0) {
+        return ret;
+    }
+
+    lists_init();
+    extend_freelist();
+
+    stack_root = stack_new();
+
+    return 0;
+}
+
+void gc_finalize(void) {
+    stack_dispose(stack_root);
+    sc_free(heap.segments);
+    heap.segments = NULL;
+}
+
+
+

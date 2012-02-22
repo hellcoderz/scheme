@@ -1,2 +1,4 @@
 *.o
 scheme
+test/test
+test/*.o

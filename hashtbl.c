@@ -46,7 +46,19 @@ hashtbl* hashtbl_new(create_fn fn) {
 }
 
 void hashtbl_dispose(hashtbl *tbl) {
-    /* do not handle nodes, let gc do it */
+    bucket *bp;
+    node *np, *next;
+    int i;
+
+    for (i = 0; i < tbl->bsize; i++) {
+        bp = (bucket*)(tbl->buckets + i);
+        np = bp->next;
+        while (np != NULL) {
+            next = np->next;
+            sc_free(np);
+            np = next;
+        }
+    }
     sc_free(tbl->buckets);
     sc_free(tbl);
 }
@@ -60,6 +72,48 @@ static unsigned int hash(char *data) {
         h = ((h << 5) + h) + *p;
     }
     return h;
+}
+
+void hashtbl_remove(hashtbl *tbl, object *obj, char *sym) {
+    unsigned int h;
+    int i;
+    bucket *p;
+    node *prev, *curr;
+
+    if (tbl == NULL) {
+        return;
+    }
+
+    h = hash(sym);
+    i = h % tbl->bsize;
+    p = (bucket*)(tbl->buckets) + i;
+    curr = p->next;
+    if (curr == NULL) {
+        return;
+    }
+
+    /* special case: remove first node */
+    if (curr->sym == obj) {
+#ifdef DEBUG_HASHTBL
+        printf("remove node: %s\n", sym);
+#endif
+        p->next = curr->next;
+        sc_free(curr);
+    }
+    prev = curr;
+    curr = curr->next;
+    while (curr != NULL) {
+        if (curr->sym == obj) {
+#ifdef DEBUG_HASHTBL
+        printf("remove node: %s\n", sym);
+#endif
+            prev->next = curr->next;
+            sc_free(curr);
+            break;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
 }
 
 object* hashtbl_insert(hashtbl *tbl, char *sym) {

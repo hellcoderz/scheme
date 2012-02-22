@@ -3,11 +3,13 @@ OBJS = eval.o log.o mem.o reader.o fixnum.o \
 	boolean.o character.o sstream.o string.o \
 	list.o symbol.o hashtbl.o sform.o env.o \
 	primitive.o procdef.o compound.o eof.o \
-	port.o ioproc.o
+	port.o ioproc.o gc.o stack.o
 
-CFLAG = -Wall -c -O2
+CFLAG = -Wall -c 
 ifeq ($(DEBUG), 1)
 	CFLAG += -g
+else
+	CFLAG += -O2
 endif
 
 scheme: $(OBJS)

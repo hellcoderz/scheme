@@ -4,7 +4,7 @@
 
 object *g_the_empty_list;
 
-object* get_empty_list() {
+object* get_empty_list(void) {
     return g_the_empty_list;
 }
 
@@ -15,7 +15,7 @@ int is_empty_list(object *obj) {
     return type(obj) == THE_EMPTY_LIST;
 }
 
-int empty_list_init() {
+int empty_list_init(void) {
     object *p;
 
     p = sc_malloc(sizeof(object));
@@ -27,6 +27,11 @@ int empty_list_init() {
     g_the_empty_list = p;
     return 0;
 }
+
+void empty_list_dispose(void) {
+    sc_free(g_the_empty_list);
+}
+
 
 
 int is_pair(object *obj) {

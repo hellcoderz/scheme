@@ -62,3 +62,8 @@ int boolean_init(void) {
     return 0;
 }
 
+void boolean_dispose(void) {
+    sc_free(g_false_val);
+    sc_free(g_true_val);
+}
+

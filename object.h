@@ -136,6 +136,7 @@ int boolean_init(void);
 int is_boolean(object *obj);
 int is_true(object *obj);
 int is_false(object *obj);
+void boolean_dispose(void);
 
 object* make_character(int val);
 int is_character(object *obj);
@@ -146,9 +147,10 @@ int string_init(void);
 void string_dispose(void);
 void string_free(object *obj);
 
-object* get_empty_list();
+object* get_empty_list(void);
 int is_empty_list(object *obj);
-int empty_list_init();
+int empty_list_init(void);
+void empty_list_dispose(void);
 
 int is_pair(object *obj);
 object* cons(object *car, object *cdr);
@@ -172,6 +174,7 @@ int is_compound_proc(object *obj);
 object* get_eof_object(void);
 int is_eof_object(object *obj);
 int eof_init(void);
+void eof_dispose(void);
 
 object* make_input_port(FILE *stream);
 int is_input_port(object *obj);

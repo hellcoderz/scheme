@@ -8,6 +8,7 @@
 #include "sform.h"
 #include "repl.h"
 #include "ioproc.h"
+#include "gc.h"
 
 int env_define_proc(char *sym, prim_proc fn, object *env) {
     object *sym_obj, *proc_obj;
@@ -810,6 +811,30 @@ static int base_environment_proc(object *params, object **result) {
     return 0;
 }
 
+static int gc_summary_proc(object *params, object **result) {
+    if (result == NULL) {
+        return SC_E_NULL;
+    }
+    if (!is_empty_list(params)) {
+        return SC_E_ARITY;
+    }
+    dump_gc_summary();
+    *result = get_nrv_symbol();
+    return 0;
+}
+
+static int gc_proc(object *params, object **result) {
+    if (result == NULL) {
+        return SC_E_NULL;
+    }
+    if (!is_empty_list(params)) {
+        return SC_E_ARITY;
+    }
+    gc();
+    *result = get_nrv_symbol();
+    return 0;
+}
+
 #define DEFINE_LIST_PROC(name) \
     define_proc(#name, name ## _proc)
 
@@ -891,6 +916,8 @@ int init_primitive(object *env) {
     define_proc("eval", eval_proc);
     define_proc("apply", apply_proc);
 
+    define_proc("gc", gc_proc);
+    define_proc("gc-summary", gc_summary_proc);
 
     ret = init_io_primitive(env);
     return ret;

@@ -25,6 +25,7 @@ int gc_init(int heap_size);
 struct object* gc_alloc(void);
 void gc(void);
 void gc_finalize(void);
+void dump_gc_summary(void);
 
 #endif
 

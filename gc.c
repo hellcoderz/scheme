@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "object.h"
 #include "gc.h"
 #include "gc_config.h"
@@ -6,6 +7,7 @@
 #include "stack.h"
 #include "log.h"
 #include "mem.h"
+#include "sform.h"
 
 static gc_heap heap;
 static gc_list free_list, active_list;
@@ -77,7 +79,7 @@ static void dump_object(object *obj) {
     }
 }
 
-static void dump_gc_summary(void) {
+void dump_gc_summary(void) {
     fprintf(stderr, "------------>gc summary<-------------\n");
     fprintf(stderr, "heap: base=%p, total=%d, used=%d\n",
             heap.segments, heap.seg_total, heap.seg_used);
@@ -206,6 +208,7 @@ static object* gc_safe_alloc(void) {
         return NULL;
     }
     obj = list_remove_front(free_list);
+    memset(obj, 0, sizeof(object));
     list_insert_front(active_list, obj);
     return obj;
 }
@@ -258,14 +261,8 @@ tailcall:
         return;
     }
     
-    /* skip marked objects
-     * environment will recur */
+    /* skip marked objects, environments will recur */
     if (is_active(obj)) {
-        return;
-    }
-
-    /* do not mark boolean, empty_list, eof */
-    if (is_boolean(obj) || is_empty_list(obj) || is_eof_object(obj)) {
         return;
     }
 
@@ -294,31 +291,48 @@ static void mark_stack_root(stack_elem elem) {
     mark_object(*(object**)elem);
 }
 
+static void mark_sform(void) {
+    mark_active(get_quote_symbol());
+    mark_active(get_set_symbol());
+    mark_active(get_define_symbol());
+    mark_active(get_nrv_symbol());
+    mark_active(get_if_symbol());
+    mark_active(get_lambda_symbol());
+    mark_active(get_begin_symbol());
+    mark_active(get_cond_symbol());
+    mark_active(get_else_symbol());
+    mark_active(get_let_symbol());
+    mark_active(get_and_symbol());
+    mark_active(get_or_symbol());
+}
+
 static void mark(void) {
     object *env;
 
-    fprintf(stderr, "mark start\n");
+    mark_sform();
+
     env = get_repl_env();
     mark_object(env);
 
     stack_for_each(stack_root, mark_stack_root);
-    fprintf(stderr, "mark finished\n");
 }
 
 
 static void sweep(void) {
     object *head = &(active_list.head);
     object *prev, *curr, *next;
+    int count = 0, free_count = 0;
 
-    fprintf(stderr,"sweep start\n");
     prev = head;
     curr = gc_chain(head);
     while (curr != NULL) {
+        count++;
         if (is_active(curr)) {
             mark_free(curr);
             prev = curr;
             curr = gc_chain(curr);
         } else {
+            free_count++;
             next = gc_chain(curr);
             gc_chain(prev) = next;
             active_list.size--;
@@ -326,17 +340,15 @@ static void sweep(void) {
             curr = next;
         }
     }
-    fprintf(stderr, "sweep finished\n");
+    fprintf(stderr, "scaned=%d, sweeped=%d\n", count, free_count);
 }
 
 
 void gc(void) {
-    fprintf(stderr, "gc start\n");
     dump_gc_summary();
     mark();
     sweep();
     dump_gc_summary();
-    fprintf(stderr, "gc finished\n");
 }
 
 

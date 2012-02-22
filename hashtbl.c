@@ -51,7 +51,7 @@ void hashtbl_dispose(hashtbl *tbl) {
     int i;
 
     for (i = 0; i < tbl->bsize; i++) {
-        bp = (bucket*)(tbl->buckets + i);
+        bp = (bucket*)(tbl->buckets) + i;
         np = bp->next;
         while (np != NULL) {
             next = np->next;

@@ -23,5 +23,8 @@ int init_obj(void) {
 void dispose_obj(void) {
     symbol_dispose();
     string_dispose();
+    boolean_dispose();
+    empty_list_dispose();
+    eof_dispose();
 }
 

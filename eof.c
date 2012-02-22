@@ -25,3 +25,7 @@ int eof_init(void) {
     return 0;
 }
 
+void eof_dispose(void) {
+    sc_free(eof_obj);
+}
+

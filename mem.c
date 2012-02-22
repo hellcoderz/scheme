@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include "mem.h"
 #include "gc.h"
 
@@ -28,7 +27,6 @@ object* alloc_object(void) {
     if (obj == NULL) {
         error("not enough memory for object");
     }
-    memset(obj, 0, sizeof(object));
     return obj;
 }
 

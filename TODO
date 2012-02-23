@@ -1,6 +1,6 @@
-rename files, remove "sc_" prefix
++rename files, remove "sc_" prefix
 add string functions
-add gc support
++add gc support
 improve core lib
 add cache for integer objects
 add floating point support

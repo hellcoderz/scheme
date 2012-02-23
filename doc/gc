@@ -6,14 +6,11 @@ mark has two valid values: ACTIVE, FREE
 chain is used to maintain a list of free/active objects
 
 2. heap size
+heap size is counted using number of segments
 heap is initialized once during startup, heap size can be set
-via main argument(-m xxM). 
+via main argument(-m number of segments). 
 heap is divided into segments, each segment has 1024 objects.
-after adding two fields to object struct, each struct is 24B.
-a segment is 24B * 1024=24KB. heap size is a multiple of segment
-size, this may require a round operation.
-Default heap size is 42 * 24KB * 8, containing a total of
-42 * 1024 * 8 = 336K objects.
+default heap size is 512 segments
 
 3. heap management
 Heap handles objects in segment size to free_list. Free list is
@@ -45,7 +42,7 @@ a. if free_list is > 256:
     return that object
 b. else if free_list is = 256:
     call gc
-    if free_list is <= 300:
+    if free_list is <= 512:
         get more segments from heap
     else:
         goto step a
@@ -78,6 +75,9 @@ won't shink.
 8. review every function
 If a C function contains an alloc_call derectly or indrectly,
 protect that allocation call.
+some objects does not need protect:
+global environment, special forms, booleans, empty list, eof object
+
 
 
 

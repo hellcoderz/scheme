@@ -5,6 +5,7 @@
 #include "sform.h"
 #include "env.h"
 #include "procdef.h"
+#include "gc.h"
 
 static int is_self_evaluate(object *exp) {
     return is_fixnum(exp) ||
@@ -28,6 +29,7 @@ static int is_tagged_list(object *exp, object *tag) {
     return 0;
 }
 
+/* eval quote */
 static int is_quoted(object *exp) {
     return is_tagged_list(exp, get_quote_symbol());
 }
@@ -36,6 +38,7 @@ static object* eval_quote(object *exp) {
     return cadr(exp);
 }
 
+/* assignment functions */
 static int is_assignment(object *exp) {
     return is_tagged_list(exp, get_set_symbol());
 }
@@ -61,7 +64,7 @@ static object* eval_assignment(object *exp, object *env) {
         return NULL;
     }
     if (!is_variable(var)) {
-        fprintf(stderr, "%s\n", "variable must be symbol");
+        fprintf(stderr, "%s\n", "variable name must be symbol");
         return NULL;
     }
 
@@ -77,9 +80,15 @@ static object* eval_assignment(object *exp, object *env) {
     return get_nrv_symbol();
 }
 
+/* lambda functions */
 static object* make_lambda(object *parameters, object *body) {
-    return cons(get_lambda_symbol(),
-                cons(parameters, body));
+    object *obj;
+
+    obj = cons(parameters, body);
+    gc_protect(obj);
+    obj = cons(get_lambda_symbol(), obj);
+    gc_abandon();
+    return obj;
 }
 
 static int is_lambda(object *exp) {
@@ -94,6 +103,7 @@ static object* lambda_body(object *exp) {
     return cddr(exp);
 }
 
+/* begin form functions */
 static object* make_begin(object *seq) {
     return cons(get_begin_symbol(), seq);
 }
@@ -106,6 +116,7 @@ static object* begin_actions(object *exp) {
     return cdr(exp);
 }
 
+/* expression related common functions */
 static int is_last_exp(object *exp) {
     return is_empty_list(cdr(exp));
 }
@@ -118,6 +129,7 @@ static object* rest_exps(object *exp) {
     return cdr(exp);
 }
 
+/* define form funtions */
 static int is_definition(object *exp) {
     return is_tagged_list(exp, get_define_symbol());
 }
@@ -157,11 +169,13 @@ static object* eval_definition(object *exp, object *env) {
         return NULL;
     }
 
+    gc_protect(val); /* protect lambda form */
     val = sc_eval(val, env);
     if (val == NULL) {
         return NULL;
     }
     ret = define_variable(var, val, env);
+    gc_abandon();
     if (ret != 0) {
         fprintf(stderr, "%s\n",
                 "unexpected error, cannot define variable");
@@ -181,13 +195,20 @@ static object* eval_variable(object *exp, object *env) {
     return obj;
 }
 
+/* if form functions */
 static object* make_if(object *predicate,
                        object *consequence,
                        object *alternative) {
-    return cons(get_if_symbol(),
-                cons(predicate,
-                    cons(consequence,
-                        cons(alternative, get_empty_list()))));
+    object *obj;
+
+    obj = cons(alternative, get_empty_list());
+    gc_protect(obj);
+    obj = cons(consequence, obj);
+    obj = cons(predicate, obj);
+    obj = cons(get_if_symbol(), obj);
+    gc_abandon();
+
+    return obj;
 }
 
 static int is_if(object *exp) {
@@ -220,6 +241,7 @@ static int check_if_arity(object *exp) {
            is_empty_list(cddddr(exp));
 }
 
+/* function application */
 static object* make_application(object *operator, object *operands) {
     return cons(operator, operands);
 }
@@ -249,14 +271,24 @@ static object* rest_operands(object *ops) {
 }
 
 static object* list_of_values(object *ops, object *env) {
+    object *car_obj, *cdr_obj, *obj;
+
     if (is_no_operands(ops)) {
         return get_empty_list();
     } else {
-        return cons(sc_eval(first_operand(ops), env),
-                    list_of_values(rest_operands(ops), env));
+        car_obj = sc_eval(first_operand(ops), env);
+        gc_protect(car_obj);
+        cdr_obj = list_of_values(rest_operands(ops), env);
+        gc_protect(cdr_obj);
+        obj = cons(car_obj, cdr_obj);
+        gc_abandon();
+        gc_abandon();
+        
+        return obj;
     }
 }
 
+/* cond form functions */
 static object* cond_clauses(object *exp) {
     return cdr(exp);
 }
@@ -309,9 +341,16 @@ static object* expand_clauses(object *clauses) {
             if (alter == NULL) {
                 return NULL;
             } else {
-                return make_if(cond_predicate(first),
-                               sequence_to_exp(cond_actions(first)),
-                               alter);
+                object *exps, *if_obj;
+                gc_protect(alter);
+                exps = sequence_to_exp(cond_actions(first));
+                gc_protect(exps);
+                if_obj = make_if(cond_predicate(first),
+                                 exps,
+                                 alter);
+                gc_abandon();
+                gc_abandon();
+                return if_obj;
             }
         }
     }
@@ -328,6 +367,7 @@ static object* cond_to_if(object *exp) {
     return expand_clauses(clauses);
 }
 
+/* let form functions */
 static int is_let(object *exp) {
     return is_tagged_list(exp, get_let_symbol());
 }
@@ -353,6 +393,8 @@ static int is_valid_binding(object *binding) {
 }
 
 static object* bindings_variables(object *bindings) {
+    object *list;
+
     if (is_empty_list(bindings)) {
         return get_empty_list();
     } else {
@@ -368,11 +410,17 @@ static object* bindings_variables(object *bindings) {
         if (rest == NULL) {
             return NULL;
         }
-        return cons(var, rest);
+
+        gc_protect(rest);
+        list = cons(var, rest);
+        gc_abandon();
+        return list;
     }
 }
 
 static object* bindings_values(object *bindings) {
+    object *list;
+
     if (is_empty_list(bindings)) {
         return get_empty_list();
     } else {
@@ -388,7 +436,11 @@ static object* bindings_values(object *bindings) {
         if (rest == NULL) {
             return NULL;
         }
-        return cons(val, rest);
+
+        gc_protect(rest);
+        list = cons(val, rest);
+        gc_abandon();
+        return list;
     }
 }
 
@@ -419,11 +471,13 @@ static object* let_values(object *exp) {
 static object* let_to_application(object *exp) {
     object *vars, *vals;
     object *body;
+    object *lambda_obj, *result;
 
     vars = let_variables(exp);
     if (vars == NULL) {
         return NULL;
     }
+    gc_protect(vars);
     vals = let_values(exp);
     if (vals == NULL) {
         return NULL;
@@ -432,11 +486,17 @@ static object* let_to_application(object *exp) {
     if (body == NULL || is_empty_list(body)) {
         return NULL;
     }
-    return make_application(
-                make_lambda(vars, body),
-                vals);
+    gc_protect(vals);
+    lambda_obj = make_lambda(vars, body);
+    gc_protect(lambda_obj);
+    result = make_application(lambda_obj, vals);
+    gc_abandon();
+    gc_abandon();
+    gc_abandon();
+    return result;
 }
 
+/* and, or form functions */
 static int is_and(object *exp) {
     return is_tagged_list(exp, get_and_symbol());
 }
@@ -457,6 +517,7 @@ static object* apply_operator(object *args) {
     return car(args);
 }
 
+/* apply form functions */
 static object* normalize_apply_operands(object *args) {
     if (is_empty_list(args)) {
         return NULL;
@@ -470,8 +531,12 @@ static object* normalize_apply_operands(object *args) {
             return cons(obj, get_empty_list());
         }
     } else {
-        return cons(car(args),
-                    normalize_apply_operands(cdr(args)));
+        object *obj, *result;
+        obj = normalize_apply_operands(cdr(args));
+        gc_protect(obj);
+        result = cons(car(args), obj);
+        gc_abandon();
+        return result;
     }
 
     /* never here */
@@ -482,6 +547,7 @@ static object* apply_operands(object *args) {
     return normalize_apply_operands(cdr(args));
 }
 
+/* eval form functions */
 static object* eval_exps(object *args) {
     return car(args);
 }
@@ -507,6 +573,8 @@ static object* eval_env(object *args) {
 object* sc_eval(object *exp, object *env) {
     object *val;
 
+    gc_protect(exp);
+    gc_protect(env);
 tailcall:
     if (exp == NULL) {
         sc_log("cannot eval NULL exp\n");
@@ -528,13 +596,15 @@ tailcall:
         if (!check_if_arity(exp)) {
             fprintf(stderr, "%s\n",
                     "wrong arity in `if form");
+            gc_abandon();
+            gc_abandon();
             return NULL;
         }
         pred = sc_eval(if_predicate(exp), env);
         exp = is_true(pred) ? if_consequence(exp) : if_alternative(exp);
         goto tailcall;
     } else if (is_lambda(exp)) {
-        return make_compound_proc(lambda_parameters(exp),
+        val = make_compound_proc(lambda_parameters(exp),
                                   lambda_body(exp),
                                   env);
     } else if (is_begin(exp)) {
@@ -548,6 +618,8 @@ tailcall:
     } else if (is_cond(exp)) {
         exp = cond_to_if(exp);
         if (exp == NULL) {
+            gc_abandon();
+            gc_abandon();
             return NULL;
         }
         goto tailcall;
@@ -555,6 +627,8 @@ tailcall:
         exp = let_to_application(exp);
         if (exp == NULL) {
             fprintf(stderr, "malformed let form\n");
+            gc_abandon();
+            gc_abandon();
             return NULL;
         }
         goto tailcall;
@@ -562,11 +636,15 @@ tailcall:
         object *result;
         exp = and_tests(exp);
         if (is_empty_list(exp)) {
+            gc_abandon();
+            gc_abandon();
             return get_true_obj();
         }
         while (!is_last_exp(exp)) {
             result = sc_eval(first_exp(exp), env);
             if (is_false(result)) {
+                gc_abandon();
+                gc_abandon();
                 return result;
             }
             exp = rest_exps(exp);
@@ -577,11 +655,15 @@ tailcall:
         object *result;
         exp = or_tests(exp);
         if (is_empty_list(exp)) {
+            gc_abandon();
+            gc_abandon();
             return get_false_obj();
         }
         while (!is_last_exp(exp)) {
             result = sc_eval(first_exp(exp), env);
             if (is_true(result)) {
+                gc_abandon();
+                gc_abandon();
                 return result;
             }
             exp = rest_exps(exp);
@@ -595,7 +677,9 @@ tailcall:
         int err;
 
         op = sc_eval(operator(exp), env);
+        gc_protect(op);
         args = list_of_values(operands(exp), env);
+        gc_protect(args);
 
         /* handle apply specially for tailcall requirement */
         if (is_apply(op)) {
@@ -603,11 +687,19 @@ tailcall:
             op = apply_operator(args);
             if (op == NULL) {
                 fprintf(stderr, "%s\n", msg);
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
                 return NULL;
             }
             args = apply_operands(args);
             if (args == NULL) {
                 fprintf(stderr, "%s\n", msg);
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
                 return NULL;
             }
         }
@@ -618,12 +710,22 @@ tailcall:
             exp = eval_exps(args);
             if (exp == NULL) {
                 fprintf(stderr, "%s\n", msg);
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
                 return NULL;
             }
             env = eval_env(args);
             if (env == NULL) {
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
                 return NULL;
             }
+            gc_abandon();
+            gc_abandon();
             goto tailcall;
         }
 
@@ -631,22 +733,38 @@ tailcall:
             fn = obj_fv(op);
             if (fn == NULL) {
                 sc_log("invalid primitive procedure\n");
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
                 return NULL;
             }
             err = fn(args, &ret);
             if (err != 0) {
                 fprintf(stderr, "%s\n", error_str(err));
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
                 return NULL;
             }
-            return ret;
+            gc_abandon();
+            gc_abandon();
+            val = ret;
         } else if (is_compound_proc(op)) {
             env = extend_env(obj_lvp(op),
                              args,
                              obj_lve(op));
             exp = make_begin(obj_lvb(op));
+            gc_abandon();
+            gc_abandon();
             goto tailcall;
         } else {
             fprintf(stderr, "%s\n", "object not applicable");
+            gc_abandon();
+            gc_abandon();
+            gc_abandon();
+            gc_abandon();
             return NULL;
         }
     } else {
@@ -655,6 +773,8 @@ tailcall:
                 "cannot evaluate expression\n");
     }
 
+    gc_abandon();
+    gc_abandon();
     return val;
 }
 

@@ -370,6 +370,7 @@ static int write_proc(object *params, object **result) {
 }
 
 static int error_proc(object *params, object **result) {
+    /* this function won't return */
     object *first, *rest;
 
     rest = params;

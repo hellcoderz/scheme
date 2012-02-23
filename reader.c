@@ -7,6 +7,7 @@
 #include "log.h"
 #include "sstream.h"
 #include "sform.h"
+#include "gc.h"
 
 static int is_delimiter(int c) {
     return isspace(c) || c == EOF ||
@@ -208,7 +209,8 @@ static int get_escape_char(FILE *in, char *p) {
             return 0;
     }
     
-    /* continue line */
+    /* continue line 
+     * eat whitespace before and after newline */
     if (isspace(c)) {
         while (c != '\n') {
             c = getc(in);
@@ -246,6 +248,7 @@ static object* parse_string(FILE *in) {
     for (;;) {
         c = getc(in);
         if (c == '"') {
+            /* end of string found */
             str = sstream_cstr(stream);
             if (str == NULL) {
                 fprintf(stderr, "%s", "no memory\n");
@@ -255,6 +258,7 @@ static object* parse_string(FILE *in) {
             }
             break;
         } else if (c == '\\') {
+            /* transform escape sequence */
             char x;
             char next;
             
@@ -271,6 +275,7 @@ static object* parse_string(FILE *in) {
             fprintf(stderr, "%s", "EOF encounted\n");
             break;
         } else {
+            /* normal charaters */
             if (sstream_append(stream, c) != 0) {
                 fprintf(stderr, "%s", "internal error\n");
                 break;
@@ -289,6 +294,7 @@ static int is_list_start(int c) {
 static object* parse_list(FILE *in) {
     int c;
     object *car_obj, *cdr_obj;
+    object *list;
 
     skip_whitespace(in);
     c = peek(in);
@@ -314,7 +320,9 @@ static object* parse_list(FILE *in) {
             return NULL;
         }
 
+        gc_protect(car_obj);
         cdr_obj = sc_read(in);
+        gc_abandon();
         if (cdr_obj == NULL) {
             return NULL;
         }
@@ -325,14 +333,29 @@ static object* parse_list(FILE *in) {
                     "missing close parentheses", c);
             return NULL;
         }
-        return cons(car_obj, cdr_obj);
+
+        gc_protect(car_obj);
+        gc_protect(cdr_obj);
+        list = cons(car_obj, cdr_obj);
+        gc_abandon();
+        gc_abandon();
+        return list;
     } else {
         /* proper list */
+        gc_protect(car_obj);
         cdr_obj = parse_list(in);
+        gc_abandon();
+
         if (cdr_obj == NULL) {
             return NULL;
         }
-        return cons(car_obj, cdr_obj);
+
+        gc_protect(car_obj);
+        gc_protect(cdr_obj);
+        list = cons(car_obj, cdr_obj);
+        gc_abandon();
+        gc_abandon();
+        return list;
     }
 
     /* should never get here */
@@ -377,7 +400,6 @@ static object* parse_symbol(FILE *in) {
         c = getc(in);
         if (is_symbol_char(c)) {
             int ret;
-            
             ret = sstream_append(stream, c);
             if (ret != 0) {
                 fprintf(stderr, "%s", "internal error\n");
@@ -386,7 +408,6 @@ static object* parse_symbol(FILE *in) {
         } else {
             if (is_delimiter(c)) {
                 char *sym;
-
                 ungetc(c, in);
                 sym = sstream_cstr(stream);
                 if (sym == NULL) {
@@ -419,7 +440,9 @@ static object* parse_quote_form(FILE *in) {
     if (cdr_obj == NULL) {
         obj = NULL;
     } else {
+        gc_protect(cdr_obj);
         obj = cons(quote, cons(cdr_obj, get_empty_list()));
+        gc_abandon();
     }
 
     return obj;

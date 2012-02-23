@@ -12,10 +12,16 @@
 
 int env_define_proc(char *sym, prim_proc fn, object *env) {
     object *sym_obj, *proc_obj;
+    int result;
 
     sym_obj = make_symbol(sym);
+    gc_protect(sym_obj);
     proc_obj = make_primitive_proc(fn);
-    return define_variable(sym_obj, proc_obj, env);
+    gc_protect(proc_obj);
+    result = define_variable(sym_obj, proc_obj, env);
+    gc_abandon();
+    gc_abandon();
+    return result;
 }
 
 char* error_str(int err) {

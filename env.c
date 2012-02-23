@@ -2,6 +2,7 @@
 #include "object.h"
 #include "env.h"
 #include "procdef.h"
+#include "gc.h"
 
 
 static object* first_frame(object *env) {
@@ -21,8 +22,16 @@ static object* frame_vals(object *frame) {
 }
 
 static int add_binding_to_frame(object *var, object *val, object *frame) {
-    set_car(frame, cons(var, car(frame)));
-    set_cdr(frame, cons(val, cdr(frame)));
+    object *obj;
+
+    obj = cons(var, frame_vars(frame));
+    set_car(frame, obj);
+
+    gc_protect(obj);
+    obj = cons(val, frame_vals(frame));
+    gc_abandon();
+    set_cdr(frame, obj);
+
     return 0;
 }
 
@@ -31,7 +40,14 @@ static object* enclosing_env(object *env) {
 }
 
 object* extend_env(object *vars, object *vals, object *base_env) {
-    return cons(make_frame(vars, vals), base_env);
+    object *obj;
+
+    obj = make_frame(vars, vals);
+    gc_protect(obj);
+    obj = cons(obj, base_env);
+    gc_abandon();
+
+    return obj;
 }
 
 static object* lookup_variable(object *var, object *env) {
@@ -100,7 +116,9 @@ object* make_base_env(void) {
     object *env;
 
     env = make_null_env();
+    gc_protect(env);
     init_primitive(env);
+    gc_abandon();
     return env;
 }
 

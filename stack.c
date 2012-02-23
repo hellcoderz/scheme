@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "stack.h"
 #include "mem.h"
 #include "log.h"
@@ -62,7 +63,8 @@ void stack_push(stack *s, stack_elem obj) {
 
     i = s->size;
     s->elems[i] = obj;
-    s->size = i++;
+    i++;
+    s->size = i;
 }
 
 void stack_pop(stack *s) {
@@ -72,6 +74,7 @@ void stack_pop(stack *s) {
         return;
     }
     i = s->size;
+    assert(i != 0);
     if (i == 0) {
         sc_log("no elements in stack\n");
         return;

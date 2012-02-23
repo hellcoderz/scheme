@@ -9,10 +9,7 @@ object* get_empty_list(void) {
 }
 
 int is_empty_list(object *obj) {
-    if (obj == NULL) {
-        return 0;
-    }
-    return type(obj) == THE_EMPTY_LIST;
+    return obj == g_the_empty_list;
 }
 
 int empty_list_init(void) {
@@ -49,7 +46,7 @@ object* cons(object *car, object *cdr) {
 }
 
 object* car(object *pair) {
-    if (pair == NULL || !is_pair(pair)) {
+    if (!is_pair(pair)) {
         return NULL;
     }
 
@@ -57,7 +54,7 @@ object* car(object *pair) {
 }
 
 object* cdr(object *pair) {
-    if (pair == NULL || !is_pair(pair)) {
+    if (!is_pair(pair)) {
         return NULL;
     }
 

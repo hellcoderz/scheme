@@ -6,6 +6,7 @@
 #include "eval.h"
 #include "repl.h"
 #include "env.h"
+#include "gc.h"
 
 static int keep_run = 1;
 static object *global_env;
@@ -29,11 +30,13 @@ static int load_core_lib(void) {
             break;
         }
 
+        gc_protect(exp);
         exp = sc_eval(exp, global_env);
         if (exp == NULL) {
             fclose(in);
             return -1;
         }
+        gc_abandon();
     }
     fclose(in);
     return 0;
@@ -82,7 +85,9 @@ int sc_repl(void) {
             break;
         }
 
+        gc_protect(exp);
         val = sc_eval(exp, global_env);
+        gc_abandon();
         if (val == NULL) {
             err_cnt++;
             continue;

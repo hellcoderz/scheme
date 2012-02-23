@@ -40,11 +40,7 @@ object* get_false_obj(void) {
 }
 
 int is_boolean(object *obj) {
-    if (obj == NULL) {
-        return 0;
-    }
-
-    return type(obj) == BOOLEAN;
+    return obj != NULL && type(obj) == BOOLEAN;
 }
 
 int is_true(object *obj) {

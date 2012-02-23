@@ -26,6 +26,10 @@ hashtbl* hashtbl_new(create_fn fn) {
     hashtbl *tbl;
     bucket *bucketp;
 
+    if (fn == NULL) {
+        return NULL;
+    }
+
     tbl = sc_malloc(sizeof(hashtbl));
     if (tbl == NULL) {
         sc_log("no memory for hashtbl\n");
@@ -95,7 +99,7 @@ void hashtbl_remove(hashtbl *tbl, object *obj, char *sym) {
     /* special case: remove first node */
     if (curr->sym == obj) {
 #ifdef DEBUG_HASHTBL
-        printf("remove node: %s\n", sym);
+        fprintf(stderr, "remove node: %s\n", sym);
 #endif
         p->next = curr->next;
         sc_free(curr);
@@ -105,7 +109,7 @@ void hashtbl_remove(hashtbl *tbl, object *obj, char *sym) {
     while (curr != NULL) {
         if (curr->sym == obj) {
 #ifdef DEBUG_HASHTBL
-        printf("remove node: %s\n", sym);
+        fprintf(stderr, "remove node: %s\n", sym);
 #endif
             prev->next = curr->next;
             sc_free(curr);
@@ -143,7 +147,7 @@ object* hashtbl_insert(hashtbl *tbl, char *sym) {
     if (np == NULL) {
         /* insert new */
 #ifdef DEBUG_HASHTBL
-        printf("insert new node: %s\n", sym);
+        fprintf(stderr, "insert new node: %s\n", sym);
 #endif
 
         sym_obj = tbl->create(sym);
@@ -161,9 +165,8 @@ object* hashtbl_insert(hashtbl *tbl, char *sym) {
         np->hash = h;
     } else {
 #ifdef DEBUG_HASHTBL
-        printf("node already exists: %s\n", sym);
+        fprintf(stderr, "node already exists: %s\n", sym);
 #endif
-
         sym_obj = np->sym;
     }
     return sym_obj;

@@ -45,22 +45,19 @@ int sstream_append(sstream *stream, char c) {
     int cap = stream->capacity;
     char *buf = stream->buf;
 
-    if (newlen <= cap) {
-        buf[newlen - 1] = c;
-        stream->len = newlen;
-    } else {
+    if (newlen > cap) {
         cap *= 2;
         buf = sc_realloc(buf, cap);
         if (buf == NULL) {
             sc_log("can not resize stream, no memory\n");
             return -1;
         }
-
-        buf[newlen - 1] = c;
-        stream->len = newlen;
         stream->capacity = cap;
         stream->buf = buf;
     }
+
+    buf[newlen - 1] = c;
+    stream->len = newlen;
     return 0;
 }
 

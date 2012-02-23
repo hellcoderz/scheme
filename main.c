@@ -11,7 +11,7 @@ static void dispose(void) {
 static int init(void) {
     int ret;
 
-    ret = gc_init(-1);
+    ret = gc_init(-1); /* -1: default heap size */
     if (ret != 0) {
         fprintf(stderr, "gc system failed to initialize\n");
         return ret;

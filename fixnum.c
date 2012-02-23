@@ -11,10 +11,6 @@ object* make_fixnum(long value) {
 }
 
 int is_fixnum(object *obj) {
-    if (obj == NULL) {
-        return 0;
-    }
-
-    return type(obj) == FIXNUM;
+    return obj != NULL && type(obj) == FIXNUM;
 }
 

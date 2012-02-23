@@ -17,6 +17,7 @@ static stack *stack_root;
 #define ACTIVE  1
 #define FREE    0
 
+/* utility functions */
 #define mark_active(p) \
     gc_mark(p) = ACTIVE
 #define mark_free(p) \
@@ -80,16 +81,17 @@ static void dump_object(object *obj) {
 }
 
 void dump_gc_summary(void) {
-    fprintf(stderr, "------------>gc summary<-------------\n");
+    fprintf(stderr, "---------------->gc summary<-----------------\n");
     fprintf(stderr, "heap: base=%p, total=%d, used=%d\n",
             heap.segments, heap.seg_total, heap.seg_used);
     fprintf(stderr, "# of objects in freelist=%d\n",
             free_list.size);
     fprintf(stderr, "# of objects in activelist=%d\n",
             active_list.size);
-    fprintf(stderr, "-------------------------------------\n");
+    fprintf(stderr, "---------------------------------------------\n");
 }
 
+/* internal heap management functions */
 static int heap_init(int heap_size) {
    object *p;
    int size = (heap_size < DEFAULT_HEAP_SIZE) ?
@@ -106,8 +108,8 @@ static int heap_init(int heap_size) {
    return 0;
 }
 
-/* call sc_free to free returned segment object */
 static gc_segment* seg_setup(object *seg) {
+    /* call sc_free to free returned segment object */
     object *p = seg;
     object *q = seg + SEGMENT_SIZE - 1;
     gc_segment *ret;
@@ -147,6 +149,8 @@ static gc_segment* heap_alloc(void) {
     return seg_setup(seg);
 }
 
+
+/* free_list and active_list common functions */
 #define INIT_GC_LIST(list) \
     gc_chain(&(list.head)) = NULL; \
     list.size = 0;
@@ -200,7 +204,7 @@ static void gc_list_insert_front(gc_list *list, object *obj) {
 #define list_insert_front(list, obj) \
     gc_list_insert_front(&list, obj)
 
-
+/* object allocation functions */
 static object* gc_safe_alloc(void) {
     object *obj;
 
@@ -255,6 +259,7 @@ static void gc_free(object *obj) {
     }
 }
 
+/* garbage collection functions */
 static void mark_object(object *obj) {
 tailcall:
     if (obj == NULL) {
@@ -309,16 +314,22 @@ static void mark_sform(void) {
 static void mark(void) {
     object *env;
 
+    /* special forms can have no references,
+     * make sure they are marked */
     mark_sform();
 
+    /* mark all objects reachable from global environment */
     env = get_repl_env();
     mark_object(env);
 
+    /* c funtion local objects, they must be protected
+     * during GC */
     stack_for_each(stack_root, mark_stack_root);
 }
 
-
 static void sweep(void) {
+    /* scan active list, free unmarked objects and mark active
+     * objects as free for next GC. */
     object *head = &(active_list.head);
     object *prev, *curr, *next;
     int count = 0, free_count = 0;
@@ -351,9 +362,9 @@ void gc(void) {
     dump_gc_summary();
 }
 
-
-/* heap_size: number of segments */
+/* initialization functions */
 int gc_init(int heap_size) {
+    /* heap_size: number of segments */
     int ret;
 
     ret = heap_init(heap_size);
@@ -375,5 +386,14 @@ void gc_finalize(void) {
     heap.segments = NULL;
 }
 
+/* stack root management functions */
+void gc_stack_root_push(object **obj) {
+    stack_elem elem = (stack_elem)obj;
+    stack_push(stack_root, elem);
+}
+
+void gc_stack_root_pop() {
+    stack_pop(stack_root);
+}
 
 

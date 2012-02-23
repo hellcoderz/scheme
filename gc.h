@@ -27,5 +27,12 @@ void gc(void);
 void gc_finalize(void);
 void dump_gc_summary(void);
 
+void gc_stack_root_push(object **obj);
+void gc_stack_root_pop();
+#define gc_protect(obj) \
+    gc_stack_root_push(&obj)
+#define gc_abandon() \
+    gc_stack_root_pop()
+
 #endif
 

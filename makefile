@@ -3,7 +3,8 @@ OBJS = eval.o log.o mem.o reader.o fixnum.o \
 	boolean.o character.o sstream.o string.o \
 	list.o symbol.o hashtbl.o sform.o env.o \
 	primitive.o procdef.o compound.o eof.o \
-	port.o ioproc.o gc.o stack.o intcache.o
+	port.o ioproc.o gc.o stack.o intcache.o \
+	charcache.o
 
 CFLAG = -Wall -c 
 ifeq ($(DEBUG), 1)

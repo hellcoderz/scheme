@@ -3,7 +3,7 @@ add string functions
 +add gc support
 improve core lib
 +add cache for integer objects
-add cache for character objects
++add cache for character objects
 +add floating point support
 add var-arg support
 improve logger

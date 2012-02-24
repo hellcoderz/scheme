@@ -15,7 +15,7 @@ int charcache_init(void) {
 
     char_cache = sc_malloc(size);
     if (char_cache == NULL) {
-        sc_log("failed to initialize character cache\n");
+        sc_log("%s", "failed to initialize character cache");
         return -1;
     }
 

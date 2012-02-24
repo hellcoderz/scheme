@@ -76,7 +76,7 @@ void stack_pop(stack *s) {
     i = s->size;
     assert(i != 0);
     if (i == 0) {
-        sc_log("no elements in stack\n");
+        sc_log("%s", "no elements in stack");
         return;
     }
 

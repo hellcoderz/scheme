@@ -23,9 +23,7 @@ object* make_boolean(int value) {
         obj = g_false_val;
     } else {
         obj = NULL;
-        char msg[64];
-        sprintf(msg, "Invalid parameter in make_boolean(%c)\n", value);
-        sc_log(msg);
+        sc_log("Invalid parameter in make_boolean(%c)", value);
     }
 
     return obj;

@@ -10,7 +10,7 @@ sstream* sstream_new(int capacity) {
 
     stream = sc_malloc(sizeof(sstream));
     if (stream == NULL) {
-        sc_log("out of memory[sstream]\n");
+        sc_log("%s", "out of memory[sstream]");
         return NULL;
     }
 
@@ -19,7 +19,7 @@ sstream* sstream_new(int capacity) {
     }
     buf = sc_malloc(cap);
     if (buf == NULL) {
-        sc_log("out of memory[sstream]\n");
+        sc_log("%s", "out of memory[sstream]");
         sc_free(stream);
         return NULL;
     }
@@ -49,7 +49,7 @@ int sstream_append(sstream *stream, char c) {
         cap *= 2;
         buf = sc_realloc(buf, cap);
         if (buf == NULL) {
-            sc_log("can not resize stream, no memory\n");
+            sc_log("%s", "can not resize stream, no memory");
             return -1;
         }
         stream->capacity = cap;
@@ -67,7 +67,7 @@ char* sstream_cstr(sstream *stream) {
 
     str = sc_malloc(len + 1);
     if (str == NULL) {
-        sc_log("no memory for cstr\n");
+        sc_log("%s", "no memory for cstr");
         return NULL;
     }
 

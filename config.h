@@ -8,10 +8,10 @@
 #define PROMPT "> "
 
 /* Undefine this line to turn off logging */
-#define DEBUG_LOG
+#define ENABLE_LOG
 
 /* uncomment this line to enable hash table debugging info */
-/* #define DEBUG_HASHTBL 1 */
+/* #define DEBUG_HASHTBL */
 
 /* hash table bucket size */
 #define DEFAULT_BUCKET_NUM 4099

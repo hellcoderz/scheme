@@ -15,7 +15,7 @@ static object* internal_make_symbol(char *sym) {
     len = strlen(sym);
     p = sc_malloc(len + 1);
     if (p == NULL) {
-        sc_log("no memory\n");
+        sc_log("%s", "no memory");
         return NULL;
     }
     strcpy(p, sym);

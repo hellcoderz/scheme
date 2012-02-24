@@ -28,13 +28,13 @@ hashtbl* hashtbl_new(create_fn fn) {
 
     tbl = sc_malloc(sizeof(hashtbl));
     if (tbl == NULL) {
-        sc_log("no memory for hashtbl\n");
+        sc_log("%s", "no memory for hashtbl");
         return NULL;
     }
 
     bucketp = sc_malloc(sizeof(bucket) * DEFAULT_BUCKET_NUM);
     if (bucketp == NULL) {
-        sc_log("no memory for hashtbl\n");
+        sc_log("%s", "no memory for hashtbl");
         sc_free(tbl);
         return NULL;
     }
@@ -152,7 +152,7 @@ object* hashtbl_insert(hashtbl *tbl, char *sym) {
         }
         np = sc_malloc(sizeof(node));
         if (np == NULL) {
-            sc_log("no memory for hashtbl\n");
+            sc_log("%s", "no memory for hashtbl");
             return NULL;
         }
         np->next = p->next;

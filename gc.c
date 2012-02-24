@@ -241,7 +241,7 @@ object* gc_alloc(void) {
 
 static void gc_free(object *obj) {
     if (obj == NULL) {
-        sc_log("gc_free got NULL argument\n");
+        sc_log("%s", "gc_free got NULL argument");
         return;
     }
 

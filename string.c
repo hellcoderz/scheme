@@ -21,7 +21,7 @@ static object* internal_make_string(char *str) {
     len = strlen(str);
     p = sc_malloc(len + 1);
     if (p == NULL) {
-        sc_log("no memory for string\n");
+        sc_log("%s", "no memory for string");
         exit(1);
     }
     strcpy(p, str);
@@ -33,7 +33,7 @@ static object* internal_make_string(char *str) {
 int string_init(void) {
     g_strtbl = hashtbl_new(internal_make_string);
     if (g_strtbl == NULL) {
-        sc_log("failed to initialize string table\n");
+        sc_log("%s", "failed to initialize string table");
         return 1;
     }
     return 0;

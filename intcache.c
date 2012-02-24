@@ -16,7 +16,7 @@ int intcache_init(void) {
     
     int_cache = sc_malloc(size);
     if (int_cache == NULL) {
-        sc_log("failed to initialize integer cache\n");
+        sc_log("%s", "failed to initialize integer cache");
         return -1;
     }
     

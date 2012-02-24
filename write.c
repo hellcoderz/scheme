@@ -28,9 +28,7 @@ static int write_character(FILE *out, object *val) {
         default:
             fprintf(out, "%c", v);
             if (!isgraph(v)) {
-                char msg[64];
-                sprintf(msg, "character not printable `%d\n", v);
-                sc_log(msg);
+                sc_log("character not printable `%d", v);
             }
             break;
     }
@@ -104,7 +102,7 @@ int sc_write(FILE *out, object *val) {
     int ret = 0;
 
     if (val == NULL) {
-        sc_log("Cannot print NULL val\n");
+        sc_log("%s", "Cannot print NULL val");
         return -1;
     }
 

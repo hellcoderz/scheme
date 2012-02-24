@@ -6,7 +6,7 @@ improve core lib
 +add cache for character objects
 +add floating point support
 add var-arg support
-improve logger
++improve logger
 
 
 may or may not do:

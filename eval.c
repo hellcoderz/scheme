@@ -578,7 +578,7 @@ object* sc_eval(object *exp, object *env) {
     gc_protect(env);
 tailcall:
     if (exp == NULL) {
-        sc_log("cannot eval NULL exp\n");
+        sc_log("%s", "cannot eval NULL exp");
         return NULL;
     }
 
@@ -733,7 +733,7 @@ tailcall:
         if (is_primitive_proc(op)) {
             fn = obj_fv(op);
             if (fn == NULL) {
-                sc_log("invalid primitive procedure\n");
+                sc_log("%s", "invalid primitive procedure");
                 gc_abandon();
                 gc_abandon();
                 gc_abandon();

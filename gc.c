@@ -2,7 +2,7 @@
 #include <string.h>
 #include "object.h"
 #include "gc.h"
-#include "gc_config.h"
+#include "config.h"
 #include "repl.h"
 #include "stack.h"
 #include "log.h"
@@ -27,6 +27,7 @@ static stack *stack_root;
 #define is_free(p) \
     gc_mark(p) == FREE
 
+#ifdef GC_DEBUG_INFO
 static void dump_object(object *obj) {
     if (obj == NULL) {
         return;
@@ -35,6 +36,10 @@ static void dump_object(object *obj) {
         case FIXNUM:
             fprintf(stderr, "fixnum@%p<%ld>\n",
                     obj, obj_nv(obj));
+            break;
+        case FLONUM:
+            fprintf(stderr, "flonum@%p<%.8g>\n",
+                    obj, obj_rv(obj));
             break;
         case CHARACTER:
             fprintf(stderr, "character@%p<%c>\n",
@@ -79,6 +84,7 @@ static void dump_object(object *obj) {
             break;
     }
 }
+#endif
 
 void dump_gc_summary(void) {
     fprintf(stderr, "---------------->gc summary<-----------------\n");
@@ -239,7 +245,9 @@ static void gc_free(object *obj) {
         return;
     }
 
+#ifdef GC_DEBUG_INFO
     dump_object(obj);
+#endif
 
     list_insert_front(free_list, obj);
     /* do object specific free */
@@ -351,15 +359,24 @@ static void sweep(void) {
             curr = next;
         }
     }
+
+#ifdef GC_DEBUG_INFO
     fprintf(stderr, "scaned=%d, sweeped=%d\n", count, free_count);
+#endif
 }
 
 
 void gc(void) {
+#ifdef GC_DEBUG_INFO
     dump_gc_summary();
+#endif
+
     mark();
     sweep();
+
+#ifdef GC_DEBUG_INFO
     dump_gc_summary();
+#endif
 }
 
 /* initialization functions */

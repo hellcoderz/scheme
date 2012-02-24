@@ -1,5 +1,6 @@
 #include "object.h"
 #include "sform.h"
+#include "intcache.h"
 
 #define CALL_WITH_CHECK(fn) \
     ret = fn(); \
@@ -10,6 +11,7 @@
 int init_obj(void) {
     int ret;
 
+    CALL_WITH_CHECK(intcache_init);
     CALL_WITH_CHECK(boolean_init);
     CALL_WITH_CHECK(eof_init);
     CALL_WITH_CHECK(empty_list_init);
@@ -26,5 +28,6 @@ void dispose_obj(void) {
     boolean_dispose();
     empty_list_dispose();
     eof_dispose();
+    intcache_dispose();
 }
 

@@ -5,6 +5,7 @@
 #include "mem.h"
 #include "hashtbl.h"
 #include "log.h"
+#include "config.h"
 
 typedef struct node {
     object *sym;
@@ -16,11 +17,6 @@ typedef struct bucket {
     node *next;
 } bucket;
 
-#define DEFAULT_BUCKET_NUM 4099
-
-#if 0
-#define DEBUG_HASHTBL 1
-#endif
 
 hashtbl* hashtbl_new(create_fn fn) {
     hashtbl *tbl;

@@ -14,7 +14,7 @@
 
 ; number functions
 (define (number? x)
-  (integer? x))
+  (rational? x))
 
 (define (inc n)
   (+ 1 n))

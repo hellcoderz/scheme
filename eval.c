@@ -9,6 +9,7 @@
 
 static int is_self_evaluate(object *exp) {
     return is_fixnum(exp) ||
+           is_flonum(exp) ||
            is_boolean(exp) ||
            is_character(exp) ||
            is_string(exp) ||

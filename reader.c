@@ -40,28 +40,55 @@ static void skip_whitespace(FILE *in) {
     }
 }
 
-static object* parse_fixnum(FILE *in, long sign) {
+static object* parse_number(FILE *in, long sign) {
     int c;
-    long num = 0;
+    char is_double = 0;
     object *p;
+    char *str_num;
+    sstream *stream;
+
+    stream = sstream_new(-1);
+    if (stream == NULL) {
+        return NULL;
+    }
 
     while (isdigit(c = getc(in))) {
-        num = (num * 10) + (c - '0');
+        sstream_append(stream, c);
     }
-    num *= sign;
-
-    ungetc(c, in);
+    if (c == '.' && isdigit(peek(in))) {
+        /* flonum */
+        is_double = 1;
+        sstream_append(stream, c);
+        while (isdigit(c = getc(in))) {
+            sstream_append(stream, c);
+        }
+    }
     if (is_delimiter(c)) {
-        p = make_fixnum(num);
+        ungetc(c, in);
+        str_num = sstream_cstr(stream);
+        if (is_double) {
+            double d;
+            d = atof(str_num);
+            d *= sign;
+            p = make_flonum(d);
+        } else {
+            long n;
+            n = atol(str_num);
+            n *= sign;
+            p = make_fixnum(n);
+        }
+        sc_free(str_num);
     } else {
         p = NULL;
         fprintf(stderr, 
-                "fixnum not followed by delimiter `%c\n", c);
+                "number not followed by delimiter `%c\n", c);
     }
+
+    sstream_dispose(stream);
     return p;
 }
 
-static int is_fixnum_start(int c, int ahead) {
+static int is_number_start(int c, int ahead) {
     return (isdigit(c) ||
            ((c == '-' || c == '+') && isdigit(ahead)));
 }
@@ -455,7 +482,7 @@ object* sc_read(FILE *in) {
     skip_whitespace(in);
 
     c = getc(in);
-    if (is_fixnum_start(c, peek(in))) {
+    if (is_number_start(c, peek(in))) {
         long sign = 1;
 
         if (c == '-') {
@@ -464,7 +491,7 @@ object* sc_read(FILE *in) {
         if (isdigit(c)) {
             ungetc(c, in);
         }
-        obj = parse_fixnum(in, sign);
+        obj = parse_number(in, sign);
     } else if (is_boolean_start(c, peek(in))) {
         obj = parse_boolean(in);
     } else if (is_character_start(c, peek(in))) {

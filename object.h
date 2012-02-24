@@ -12,6 +12,7 @@
 
 typedef enum {
 	FIXNUM,
+    FLONUM,
     BOOLEAN,
     CHARACTER,
     STRING,
@@ -48,6 +49,9 @@ typedef struct object {
             long value;
         } fixnum;
         struct {
+            double value;
+        } flonum;
+        struct {
             char *buf;
         } string;
         struct {
@@ -78,6 +82,7 @@ typedef struct object {
 #define obj_cv(p) (p->data.character.value)
 #define obj_bv(p) (p->data.boolean.value)
 #define obj_nv(p) (p->data.fixnum.value)
+#define obj_rv(p) (p->data.flonum.value) /* rational number */
 #define obj_sv(p) (p->data.string.buf)
 #define obj_pv(p) (p->data.pair)
 #define obj_iv(p) (p->data.symbol.value)    /* identifier */
@@ -128,6 +133,9 @@ void dispose_obj(void);
 
 object* make_fixnum(long value);
 int is_fixnum(object *obj);
+
+object* make_flonum(double val);
+int is_flonum(object *obj);
 
 object* make_boolean(int value);
 object* get_false_obj(void);

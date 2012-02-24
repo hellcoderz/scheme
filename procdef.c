@@ -54,6 +54,7 @@ char* error_str(int err) {
     return NULL;
 }
 
+
 static int is_null_proc(object *params, object **result) {
     int ret;
 
@@ -110,6 +111,23 @@ static int is_integer_proc(object *params, object **result) {
     }
 
     ret = is_fixnum(car(params));
+    *result = ret ? get_true_obj() : get_false_obj();
+    return 0;
+}
+
+static int is_rational_proc(object *params, object **result) {
+    int ret;
+    object *obj;
+
+    if (result == NULL) {
+        return SC_E_NULL;
+    }
+    if (!is_empty_list(cdr(params))) {
+        return SC_E_ARITY;
+    }
+
+    obj = car(params);
+    ret = is_flonum(obj) || is_fixnum(obj);
     *result = ret ? get_true_obj() : get_false_obj();
     return 0;
 }
@@ -220,6 +238,7 @@ static int integer_to_char_proc(object *params, object **result) {
 
 static int number_to_string_proc(object *params, object **result) {
     char buf[64];
+    object *num_obj;
 
     if (result == NULL) {
         return SC_E_NULL;
@@ -227,11 +246,16 @@ static int number_to_string_proc(object *params, object **result) {
     if (!is_empty_list(cdr(params))) {
         return SC_E_ARITY;
     }
-    if (!is_fixnum(car(params))) {
+
+    num_obj = car(params);
+    if (is_fixnum(num_obj)) {
+        sprintf(buf, "%ld", obj_nv(num_obj));
+    } else if (is_flonum(num_obj)) {
+        sprintf(buf, "%.8g", obj_rv(num_obj));
+    } else {
         return SC_E_ARG_TYPE;
     }
 
-    sprintf(buf, "%ld", obj_nv(car(params)));
     *result = make_string(buf);
     if (*result == NULL) {
         return SC_E_NO_MEM;
@@ -241,7 +265,10 @@ static int number_to_string_proc(object *params, object **result) {
 
 static int string_to_number_proc(object *params, object **result) {
     long lv;
+    double dv;
+    char is_double = 0;
     char *str;
+    object *str_obj;
 
     if (result == NULL) {
         return SC_E_NULL;
@@ -260,12 +287,24 @@ static int string_to_number_proc(object *params, object **result) {
     while (*str != '\0' && isdigit(*str)) {
         str++;
     }
+    if (*str == '.' && isdigit(*(++str))) {
+        is_double = 1;
+        while (*str != '\0' && isdigit(*str)) {
+            str++;
+        }
+    }
     if (*str != '\0') {
         return SC_E_ARG_INVL;
     }
 
-    lv = atol(obj_sv(car(params)));
-    *result = make_fixnum(lv);
+    str_obj = car(params);
+    if (is_double) {
+        dv = atof(obj_sv(str_obj));
+        *result = make_flonum(dv);
+    } else {
+        lv = atol(obj_sv(str_obj));
+        *result = make_fixnum(lv);
+    }
     if (*result == NULL) {
         return SC_E_NO_MEM;
     }
@@ -308,25 +347,66 @@ static int string_to_symbol_proc(object *params, object **result) {
     return 0;
 }
 
+static double number_to_double(object *num_obj) {
+    if (is_fixnum(num_obj)) {
+        return (double)obj_nv(num_obj);
+    } else if (is_flonum(num_obj)) {
+        return obj_rv(num_obj);
+    } else {
+        return 0.0;
+    }
+}
+
+static int is_number(object *obj) {
+    return is_fixnum(obj) || is_flonum(obj);
+}
+
 static int add_proc(object *params, object **result) {
     long sum = 0;
+    double dsum = 0.0;
+    char use_double = 0;
     object *list = params;
     object *elem;
 
     if (result == NULL) {
         return SC_E_NULL;
     }
-    
+
     while (!is_empty_list(list)) {
         elem = car(list);
-        if (is_fixnum(elem)) {
-            sum += obj_nv(elem);
-            list = cdr(list);
-        } else {
+        if (is_flonum(elem)) {
+            use_double = 1;
+            break;
+        } else if (!is_fixnum(elem)) {
             return SC_E_ARG_TYPE;
         }
+        list = cdr(list);
     }
-    *result = make_fixnum(sum);
+    
+    list = params;
+    if (use_double) {
+        while (!is_empty_list(list)) {
+            elem = car(list);
+            if (is_number(elem)) {
+                dsum += number_to_double(elem);
+                list = cdr(list);
+            } else {
+                return SC_E_ARG_TYPE;
+            }
+        }
+        *result = make_flonum(dsum);
+    } else {
+        while (!is_empty_list(list)) {
+            elem = car(list);
+            if (is_fixnum(elem)) {
+                sum += obj_nv(elem);
+                list = cdr(list);
+            } else {
+                return SC_E_ARG_TYPE;
+            }
+        }
+        *result = make_fixnum(sum);
+    }
     if (*result == NULL) {
         return SC_E_NO_MEM;
     }
@@ -335,6 +415,8 @@ static int add_proc(object *params, object **result) {
 
 static int sub_proc(object *params, object **result) {
     long remain;
+    double dremain;
+    char use_double = 0;
     object *list;
     object *elem;
 
@@ -344,29 +426,60 @@ static int sub_proc(object *params, object **result) {
     if (is_empty_list(params)) {
         return SC_E_ARITY;
     }
+
+    list = params;
+    while (!is_empty_list(list)) {
+        elem = car(list);
+        if (is_flonum(elem)) {
+            use_double = 1;
+            break;
+        } else if (!is_fixnum(elem)) {
+            return SC_E_ARG_TYPE;
+        }
+        list = cdr(list);
+    }
    
     elem = car(params);
-    if (!is_fixnum(elem)) {
+    if (!is_number(elem)) {
         return SC_E_ARG_TYPE;
     }
-    list = cdr(params);
-    remain = obj_nv(elem);
 
-    if (is_empty_list(cdr(params))) {
-        /* one argument: (- x) = -x */
-        remain = -remain;
-    } else {
-        while (!is_empty_list(list)) {
-            elem = car(list);
-            if (is_fixnum(elem)) {
-                remain -= obj_nv(elem);
-                list = cdr(list);
-            } else {
-                return SC_E_ARG_TYPE;
+    list = cdr(params);
+    if (use_double) {
+        dremain = number_to_double(elem);
+        if (is_empty_list(list)) {
+            /* one argument: (- x) = -x */
+            dremain = -dremain;
+        } else {
+            while (!is_empty_list(list)) {
+                elem = car(list);
+                if (is_number(elem)) {
+                    dremain -= number_to_double(elem);
+                    list = cdr(list);
+                } else {
+                    return SC_E_ARG_TYPE;
+                }
             }
         }
+        *result = make_flonum(dremain);
+    } else {
+        remain = obj_nv(elem);
+        if (is_empty_list(list)) {
+            /* one argument: (- x) = -x */
+            remain = -remain;
+        } else {
+            while (!is_empty_list(list)) {
+                elem = car(list);
+                if (is_fixnum(elem)) {
+                    remain -= obj_nv(elem);
+                    list = cdr(list);
+                } else {
+                    return SC_E_ARG_TYPE;
+                }
+            }
+        }
+        *result = make_fixnum(remain);
     }
-    *result = make_fixnum(remain);
     if (*result == NULL) {
         return SC_E_NO_MEM;
     }
@@ -375,23 +488,50 @@ static int sub_proc(object *params, object **result) {
 
 static int mul_proc(object *params, object **result) {
     long product = 1;
+    double dproduct = 1.0;
+    char use_double = 0;
     object *list = params;
     object *elem;
 
     if (result == NULL) {
         return SC_E_NULL;
     }
-    
+
     while (!is_empty_list(list)) {
         elem = car(list);
-        if (is_fixnum(elem)) {
-            product *= obj_nv(elem);
-            list = cdr(list);
-        } else {
+        if (is_flonum(elem)) {
+            use_double = 1;
+            break;
+        } else if (!is_fixnum(elem)) {
             return SC_E_ARG_TYPE;
         }
+        list = cdr(list);
     }
-    *result = make_fixnum(product);
+    
+    list = params;
+    if (use_double) {
+        while (!is_empty_list(list)) {
+            elem = car(list);
+            if (is_number(elem)) {
+                dproduct *= number_to_double(elem);
+                list = cdr(list);
+            } else {
+                return SC_E_ARG_TYPE;
+            }
+        }
+        *result = make_flonum(dproduct);
+    } else {
+        while (!is_empty_list(list)) {
+            elem = car(list);
+            if (is_fixnum(elem)) {
+                product *= obj_nv(elem);
+                list = cdr(list);
+            } else {
+                return SC_E_ARG_TYPE;
+            }
+        }
+        *result = make_fixnum(product);
+    }
     if (*result == NULL) {
         return SC_E_NO_MEM;
     }
@@ -462,7 +602,7 @@ typedef enum {EQ, LESS, GREATER, LESS_EQ, GREATER_EQ} cmp_mode;
 
 static int number_compare(object *params, object **result, cmp_mode mode) {
     object *false_obj;
-    long val;
+    double val;
     object *list, *elem;
 
     if (result == NULL) {
@@ -475,43 +615,43 @@ static int number_compare(object *params, object **result, cmp_mode mode) {
 
     list = cdr(params);
     elem = car(params);
-    if (!is_fixnum(elem)) {
+    if (!is_number(elem)) {
         return SC_E_ARG_TYPE;
     }
-    val = obj_nv(elem);
+    val = number_to_double(elem);
     false_obj = get_false_obj();
     while (!is_empty_list(list)) {
         elem = car(list);
-        if (!is_fixnum(elem)) {
+        if (!is_number(elem)) {
             return SC_E_ARG_TYPE;
         }
         switch (mode) {
             case EQ:
-                if (val != obj_nv(elem)) {
+                if (val != number_to_double(elem)) {
                     *result = false_obj;
                     return 0;
                 }
                 break;
             case LESS:
-                if (val >= obj_nv(elem)) {
+                if (val >= number_to_double(elem)) {
                     *result = false_obj;
                     return 0;
                 }
                 break;
             case GREATER:
-                if (val <= obj_nv(elem)) {
+                if (val <= number_to_double(elem)) {
                     *result = false_obj;
                     return 0;
                 }
                 break;
             case LESS_EQ:
-                if (val > obj_nv(elem)) {
+                if (val > number_to_double(elem)) {
                     *result = false_obj;
                     return 0;
                 }
                 break;
             case GREATER_EQ:
-                if (val < obj_nv(elem)) {
+                if (val < number_to_double(elem)) {
                     *result = false_obj;
                     return 0;
                 }
@@ -520,7 +660,7 @@ static int number_compare(object *params, object **result, cmp_mode mode) {
                 *result = false_obj;
                 return 0;
         }
-        val = obj_nv(elem);
+        val = number_to_double(elem);
         list = cdr(list);
     }
     *result = get_true_obj();
@@ -854,6 +994,7 @@ int init_primitive(object *env) {
     define_proc("boolean?", is_boolean_proc);
     define_proc("symbol?", is_symbol_proc);
     define_proc("integer?", is_integer_proc);
+    define_proc("rational?", is_rational_proc);
     define_proc("char?", is_char_proc);
     define_proc("string?", is_string_proc);
     define_proc("pair?", is_pair_proc);

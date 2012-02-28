@@ -104,6 +104,46 @@ static object* lambda_body(object *exp) {
     return cddr(exp);
 }
 
+static int check_arity(object *args, int arity, int has_vararg) {
+    int i;
+    object *rest = args;
+
+    for (i = 0; i < arity; i++) {
+        rest = cdr(rest);
+    }
+
+    if (!has_vararg && !is_empty_list(rest)) {
+        return 0;
+    }
+    if (has_vararg && rest == NULL) {
+        return 0;
+    }
+    return 1;
+}
+
+static object* normalize_lambda_args(int argc, int has_vararg, object *raw_arg) {
+    object *norm_args = raw_arg;
+
+    if (!check_arity(raw_arg, argc, has_vararg)) {
+        return NULL;
+    }
+
+    if (has_vararg) {
+        if (argc == 0) {
+            norm_args = cons(raw_arg, get_empty_list());
+        } else {
+            object *cdr_obj = get_empty_list();
+            while (argc != 1) {
+                raw_arg = cdr(raw_arg);
+                argc--;
+            }
+            cdr_obj = cons(cdr(raw_arg), cdr_obj);
+            set_cdr(raw_arg, cdr_obj);
+        }
+    }
+    return norm_args;
+}
+
 /* begin form functions */
 static object* make_begin(object *seq) {
     return cons(get_begin_symbol(), seq);
@@ -753,6 +793,16 @@ tailcall:
             gc_abandon();
             val = ret;
         } else if (is_compound_proc(op)) {
+            /* handle var-arg */
+            args = normalize_lambda_args(obj_lvargc(op), obj_lvvar(op), args);
+            if (args == NULL) {
+                fprintf(stderr, "wrong arity\n");
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                return NULL;
+            }
             env = extend_env(obj_lvp(op),
                              args,
                              obj_lve(op));

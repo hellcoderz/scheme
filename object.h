@@ -68,6 +68,8 @@ typedef struct object {
             struct object *parameters;
             struct object *body;
             struct object *env;
+            char has_vararg;
+            unsigned char argc; /* (x y . z) is 2 */
         } compound_proc;
         struct {
             FILE *stream;
@@ -91,6 +93,8 @@ typedef struct object {
 #define obj_lvp(p) (obj_lv(p).parameters)
 #define obj_lvb(p) (obj_lv(p).body)
 #define obj_lve(p) (obj_lv(p).env)
+#define obj_lvargc(p) (obj_lv(p).argc)
+#define obj_lvvar(p) (obj_lv(p).has_vararg)
 #define obj_ipv(p) (p->data.input_port.stream)
 #define obj_opv(p) (p->data.output_port.stream)
 #define gc_mark(p) ((p)->gc.mark)

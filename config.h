@@ -7,7 +7,7 @@
 
 #define PROMPT "> "
 
-/* Undefine this line to turn off logging */
+/* comment this line to turn off logging */
 #define ENABLE_LOG
 
 /* uncomment this line to enable hash table debugging info */
@@ -34,7 +34,7 @@
 #define GC_THRESHOLD    256
 
 /* enable gc debugging info */
-#define GC_DEBUG_INFO
+/* #define GC_DEBUG_INFO */
 
 #endif
 

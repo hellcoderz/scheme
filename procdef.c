@@ -486,6 +486,36 @@ static int sub_proc(object *params, object **result) {
     return 0;
 }
 
+static int div_proc(object *params, object **result) {
+    double n, d, ret;
+    object *nobj, *dobj;
+
+    if (result == NULL) {
+        return SC_E_NULL;
+    }
+    if (!is_empty_list(cddr(params))) {
+        return SC_E_ARITY;
+    }
+    nobj = car(params);
+    dobj = cadr(params);
+    if (!is_number(nobj) || !is_number(dobj)) {
+        return SC_E_ARG_TYPE;
+    }
+
+    n = number_to_double(nobj);
+    d = number_to_double(dobj);
+    if (d == 0) {
+        return SC_E_DIV;
+    }
+    ret = n / d;
+    
+    *result = make_flonum(ret);
+    if (*result == NULL) {
+        return SC_E_NO_MEM;
+    }
+    return 0;
+}
+
 static int mul_proc(object *params, object **result) {
     long product = 1;
     double dproduct = 1.0;
@@ -1010,6 +1040,7 @@ int init_primitive(object *env) {
     define_proc("+", add_proc);
     define_proc("-", sub_proc);
     define_proc("*", mul_proc);
+    define_proc("/", div_proc);
     define_proc("quotient", quotient_proc);
     define_proc("remainder", remainder_proc);
     define_proc("=", is_number_equal_proc);

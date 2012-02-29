@@ -384,10 +384,6 @@ static int error_proc(object *params, object **result) {
     exit(1);
 }
 
-
-#define define_proc(x, y) \
-    env_define_proc(x, y, env)
-
 int init_io_primitive(object *env) {
     define_proc("load", load_proc);
     define_proc("open-input-port", open_input_port_proc);

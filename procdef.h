@@ -18,11 +18,31 @@ enum {
     SC_E_LOAD,
 };
 
+
+#define check_null(p) \
+    if (p == NULL) { \
+        return SC_E_NULL; \
+    }
+#define check_arg2(p) \
+    if (!is_empty_list(cddr(p))) { \
+        return SC_E_ARITY; \
+    }
+#define check_arg1(p) \
+    if (!is_empty_list(cdr(p))) { \
+        return SC_E_ARITY; \
+    }
+
 int init_primitive(object *env);
 char* error_str(int err);
 int is_apply(object *obj);
 int is_eval(object *obj);
 int env_define_proc(char *sym, prim_proc fn, object *env);
+
+double number_to_double(object *obj);
+int is_number(object *obj);
+
+#define define_proc(x, y) \
+    env_define_proc(x, y, env)
 
 #endif
 

@@ -8,6 +8,7 @@
 #include "sform.h"
 #include "repl.h"
 #include "ioproc.h"
+#include "mathproc.h"
 #include "gc.h"
 
 int env_define_proc(char *sym, prim_proc fn, object *env) {
@@ -347,7 +348,7 @@ static int string_to_symbol_proc(object *params, object **result) {
     return 0;
 }
 
-static double number_to_double(object *num_obj) {
+double number_to_double(object *num_obj) {
     if (is_fixnum(num_obj)) {
         return (double)obj_nv(num_obj);
     } else if (is_flonum(num_obj)) {
@@ -357,7 +358,7 @@ static double number_to_double(object *num_obj) {
     }
 }
 
-static int is_number(object *obj) {
+int is_number(object *obj) {
     return is_fixnum(obj) || is_flonum(obj);
 }
 
@@ -1014,9 +1015,6 @@ static int gc_proc(object *params, object **result) {
 #define DEFINE_LIST_PROC(name) \
     define_proc(#name, name ## _proc)
 
-#define define_proc(x, y) \
-    env_define_proc(x, y, env)
-
 int init_primitive(object *env) {
     int ret;
 
@@ -1098,6 +1096,10 @@ int init_primitive(object *env) {
     define_proc("gc-summary", gc_summary_proc);
 
     ret = init_io_primitive(env);
+    if (ret != 0) {
+        return ret;
+    }
+    ret = init_math_primitive(env);
     return ret;
 }
 

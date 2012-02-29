@@ -11,7 +11,7 @@ Small features:
 + improve logger **[DONE]**
 + modify equal? eq? eqv?
 + add / primitive procedure **DONE**
-+ add math primitive functions
++ add math primitive functions **DONE**
 
 Big features:
 ------

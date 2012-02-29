@@ -109,7 +109,7 @@ int sc_write(FILE *out, object *val) {
     if (is_fixnum(val)) {
         fprintf(out, "%ld", obj_nv(val));
     } else if (is_flonum(val)) {
-        fprintf(out, "%.8g", obj_rv(val));
+        fprintf(out, "%.16g", obj_rv(val));
     } else if (is_boolean(val)) {
         char v = is_true(val) ? 't' : 'f';
         fprintf(out, "#%c", v);

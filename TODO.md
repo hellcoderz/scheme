@@ -10,6 +10,8 @@ Small features:
 + add var-arg support **[DONE]**
 + improve logger **[DONE]**
 + modify equal? eq? eqv?
++ add / primitive procedure **DONE**
++ add math primitive functions
 
 Big features:
 ------

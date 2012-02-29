@@ -17,7 +17,7 @@ Features included:
 + lambda, of course
 + integer(32 bit), floating-point numbers, string, symbol, boolean,
 character, pair
-+ basic mathmatical fucntions
++ basic mathematical functions
 + basic input/output support
 + cond, if, let, begin, and, or, define, set!, apply, eval...
 + var-arg
@@ -25,8 +25,6 @@ character, pair
 + mark-sweep garbage collector
 + You should be able to use this Scheme interpreter to run all
 codes in *The Little Schemer*.
-+ You might be able to do excercises in *SICP* with this interpreter,
-though I havn't tried.
 
 There is a small todo list, see **TODO.md.**
 

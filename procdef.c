@@ -116,7 +116,7 @@ static int is_integer_proc(object *params, object **result) {
     return 0;
 }
 
-static int is_rational_proc(object *params, object **result) {
+static int is_real_proc(object *params, object **result) {
     int ret;
     object *obj;
 
@@ -324,6 +324,44 @@ static int symbol_to_string_proc(object *params, object **result) {
     }
 
     *result = make_string(obj_iv(car(params)));
+    if (*result == NULL) {
+        return SC_E_NO_MEM;
+    }
+    return 0;
+}
+
+static int exact_to_inexact_proc(object *params, object **result) {
+    object *obj;
+    double d;
+
+    check_null(result);
+    check_arg1(params);
+
+    obj = car(params);
+    if (!is_fixnum(obj)) {
+        return SC_E_ARG_TYPE;
+    }
+    d = (double)obj_nv(obj);
+    *result = make_flonum(d);
+    if (*result == NULL) {
+        return SC_E_NO_MEM;
+    }
+    return 0;
+}
+
+static int inexact_to_exact_proc(object *params, object **result) {
+    object *obj;
+    long n;
+
+    check_null(result);
+    check_arg1(params);
+
+    obj = car(params);
+    if (!is_flonum(obj)) {
+        return SC_E_ARG_TYPE;
+    }
+    n = (long)obj_rv(obj);
+    *result = make_fixnum(n);
     if (*result == NULL) {
         return SC_E_NO_MEM;
     }
@@ -854,14 +892,14 @@ static int list_proc(object *params, object **result) {
     return 0;
 }
 
-static int is_eq(object *a, object *b);
-static int is_list_eq(object *this, object *that) {
+static int is_equal(object *a, object *b);
+static int is_list_equal(object *this, object *that) {
     object *a, *b;
 
     while (!is_empty_list(this) && !is_empty_list(that)) {
         a = car(this);
         b = car(that);
-        if (!is_eq(a, b)) {
+        if (!is_equal(a, b)) {
             return 0;
         }
         this = cdr(this);
@@ -873,20 +911,17 @@ static int is_list_eq(object *this, object *that) {
     return 0;
 }
 
-static int is_eq(object *this, object *that) {
-    object *a = this;
-    object *b = that;
-
+static int is_eqv(object *a, object *b) {
     if (type(a) != type(b)) {
         return 0;
     }
     switch (type(a)) {
         case FIXNUM:
             return obj_nv(a) == obj_nv(b);
+        case FLONUM:
+            return obj_rv(a) == obj_rv(b);
         case CHARACTER:
             return obj_cv(a) == obj_cv(b);
-        case PAIR:
-            return is_list_eq(a, b);
         default:
             return a == b;
     }
@@ -895,23 +930,57 @@ static int is_eq(object *this, object *that) {
     return 0;
 }
 
+static int is_equal(object *a, object *b) {
+    if (type(a) != type(b)) {
+        return 0;
+    }
+    if (is_pair(a)) {
+        return is_list_equal(a, b);
+    } else {
+        return is_eqv(a, b);
+    }
+
+    /* never here */
+    return 0;
+}
+
 static int is_eq_proc(object *params, object **result) {
+    object *a, *b;
+
+    check_null(result);
+    check_arg2(params);
+
+    a = car(params);
+    b = cadr(params);
+    *result = (a == b) ? get_true_obj() : get_false_obj();
+    return 0;
+}
+
+static int is_eqv_proc(object *params, object **result) {
     object *this, *that;
 
-    if (result == NULL) {
-        return SC_E_NULL;
-    }
-    if (!is_empty_list(cddr(params))) {
-        return SC_E_ARITY;
-    }
+    check_null(result);
+    check_arg2(params);
 
     this = car(params);
     that = cadr(params);
-    if (is_eq(this,that)) {
+    if (is_eqv(this,that)) {
         *result = get_true_obj();
     } else {
         *result = get_false_obj();
     }
+    return 0;
+}
+
+static int is_equal_proc(object *params, object **result) {
+    object *a, *b;
+
+    check_null(result);
+    check_arg2(params);
+
+    a = car(params);
+    b = cadr(params);
+    *result = is_equal(a, b) ? get_true_obj() : get_false_obj();
     return 0;
 }
 
@@ -1022,7 +1091,7 @@ int init_primitive(object *env) {
     define_proc("boolean?", is_boolean_proc);
     define_proc("symbol?", is_symbol_proc);
     define_proc("integer?", is_integer_proc);
-    define_proc("rational?", is_rational_proc);
+    define_proc("real?", is_real_proc);
     define_proc("char?", is_char_proc);
     define_proc("string?", is_string_proc);
     define_proc("pair?", is_pair_proc);
@@ -1034,6 +1103,8 @@ int init_primitive(object *env) {
     define_proc("string->number", string_to_number_proc);
     define_proc("symbol->string", symbol_to_string_proc);
     define_proc("string->symbol", string_to_symbol_proc);
+    define_proc("exact->inexact", exact_to_inexact_proc);
+    define_proc("inexact->exact", inexact_to_exact_proc);
 
     define_proc("+", add_proc);
     define_proc("-", sub_proc);
@@ -1082,7 +1153,9 @@ int init_primitive(object *env) {
     define_proc("set-cdr!", set_cdr_proc);
     define_proc("list", list_proc);
 
+    define_proc("eqv?", is_eqv_proc);
     define_proc("eq?", is_eq_proc);
+    define_proc("equal?", is_equal_proc);
 
     define_proc("exit", exit_proc);
     

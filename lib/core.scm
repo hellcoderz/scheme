@@ -12,9 +12,19 @@
 ; amount of arguments.
 ;
 
+(define (reload-core)
+  (load "lib/core.scm"))
+
 ; number functions
 (define (number? x)
-  (rational? x))
+  (real? x))
+
+(define (exact? x)
+  (integer? x))
+
+(define (inexact? x)
+  (and (real? x)
+       (not (exact? x))))
 
 (define (inc n)
   (+ 1 n))
@@ -23,7 +33,34 @@
   (- n 1))
 
 (define (zero? n)
-  (eq? n 0))
+  (= n 0))
+
+(define (positive? x)
+  (> x 0))
+
+(define (negative? x)
+  (< x 0))
+
+(define (even? n)
+  (zero? (remainder n 2)))
+
+(define (odd? n)
+  (not (even? n)))
+
+(define (max x y . z)
+  (reduce-left
+    (lambda (x y)
+      (if (> x y) x y))
+    x
+    (cons x (cons y z))))
+
+(define (min x y . z)
+  (reduce-left
+    (lambda (x y)
+      (if (> x y) y x))
+    x
+    (cons x (cons y z))))
+
 
 
 ; boolean functions
@@ -107,3 +144,18 @@
   (if (pair? tail)
     (car tail)))
 
+(define (reduce-left fn initial seq)
+  (define (reduce-iter fn val rest)
+    (if (null? rest)
+      val
+      (reduce-iter
+        fn
+        (fn val (car rest))
+        (cdr rest))))
+  (cond
+    ((null? seq) initial)
+    ((null? (cdr seq)) (car seq))
+    (else (reduce-iter
+            fn
+            (fn (car seq) (cadr seq))
+            (cddr seq)))))

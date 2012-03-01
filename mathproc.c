@@ -47,9 +47,11 @@ MAKE_UNARY_PROC(exp);
 MAKE_UNARY_PROC(log);
 MAKE_UNARY_PROC(log10);
 MAKE_UNARY_PROC(sqrt);
+MAKE_UNARY_PROC(cbrt);
 MAKE_UNARY_PROC(ceil);
 MAKE_UNARY_PROC(floor);
-MAKE_UNARY_PROC(cbrt);
+MAKE_UNARY_PROC(trunc);
+MAKE_UNARY_PROC(round);
 
 static int pow_proc(object *params, object **result) {
     double x, y, ret;
@@ -119,8 +121,10 @@ int init_math_primitive(object *env) {
     define_proc("sqrt", sqrt_proc);
     define_proc("ceil", ceil_proc);
     define_proc("floor", floor_proc);
+    define_proc("truncate", trunc_proc);
+    define_proc("round", round_proc);
     define_proc("cbrt", cbrt_proc);
-    define_proc("pow", pow_proc);
+    define_proc("expt", pow_proc);
     define_proc("abs", abs_proc);
 
     return 0;

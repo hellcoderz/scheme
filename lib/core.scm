@@ -5,12 +5,6 @@
 ; 2012-2-16, initial version
 ;
 
-; NOTES:
-;
-; due to implementation limitations, SC Scheme does not support
-; var-args, many functions are thus simplified to take the least
-; amount of arguments.
-;
 
 (define (reload-core)
   (load "lib/core.scm"))
@@ -35,6 +29,9 @@
 (define (zero? n)
   (= n 0))
 
+(define (one? n)
+  (= n 1))
+
 (define (positive? x)
   (> x 0))
 
@@ -42,7 +39,9 @@
   (< x 0))
 
 (define (even? n)
-  (zero? (remainder n 2)))
+  (if (integer? n)
+    (zero? (remainder n 2))
+    #f))
 
 (define (odd? n)
   (not (even? n)))
@@ -61,6 +60,14 @@
     x
     (cons x (cons y z))))
 
+(define (gcd a b)
+  (if (= b 0)
+    a
+    (gcd b (remainder a b))))
+
+(define (lcm a b)
+  (let ((d (gcd a b)))
+    (* a (quotient b d))))
 
 
 ; boolean functions

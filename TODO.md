@@ -13,7 +13,7 @@ Small features:
 + add math primitive functions **[DONE]**
 + add character procedures
 + improve list procedures
-+ add gcd, lcm procedures
++ add gcd, lcm procedures **[DONE]**
 
 Big features:
 ------

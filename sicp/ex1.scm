@@ -63,3 +63,42 @@
       (< (abs (- guess next)) 0.0000000001)))
   (cube-root-iter 1.0 x))
 
+(define (A x y)
+  (cond ((= y 0) 0)
+        ((= x 0) (* 2 y))
+        ((= y 1) 2)
+        (else (A (- x 1)
+                 (A x (- y 1))))))
+
+
+(define (f n)
+  (cond ((< n 3) n)
+        (else (+ (f (- n 1))
+                 (* 2 (f (- n 2)))
+                 (* 3 (f (- n 3)))))))
+(define (f-iter n)
+  (define (iter k n a b c)
+    (cond ((< n 3) n)
+          ((> k n) a)
+          (else (iter (+ k 1)
+                      n
+                      (+ a
+                         (* b 2)
+                         (* c 3))
+                      a
+                      b))))
+  (iter 3 n 2 1 0))
+
+(define (pascal r c)
+  (cond ((= c 1) 1)
+        ((= c r) 1)
+        (else (+ (pascal (- r 1) (- c 1))
+                 (pascal (- r 1) c)))))
+
+(define (fast-expt b n)
+  (define (iter b n ret)
+    (cond ((zero? n) ret)
+          ((even? n) (iter (* b b) (quotient n 2) ret))
+          (else (iter b (- n 1) (* ret b)))))
+  (iter b n 1))
+

@@ -1,4 +1,4 @@
-Small features:
+A small todo list:
 ---------------
 + rename files, remove "sc_" prefix **[DONE]**
 + add string functions
@@ -11,11 +11,9 @@ Small features:
 + modify equal? eq? eqv? **[DONE]**
 + add / primitive procedure **[DONE]**
 + add math primitive functions **[DONE]**
-+ add character procedures
++ add character procedures **[DONE]**
 + improve list procedures
 + add gcd, lcm procedures **[DONE]**
-
-Big features:
-------
++ add vector support
 + macro support
 + call/cc

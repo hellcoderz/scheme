@@ -83,6 +83,72 @@
   (not (false? b)))
 
 
+; character procedures
+(define (char=? a b . rest)
+  (apply
+    (lambda seq
+      (apply = (map char->integer seq)))
+    a b rest))
+
+(define (char<? a b . rest)
+  (apply
+    (lambda seq
+      (apply < (map char->integer seq)))
+    a b rest))
+
+(define (char>? a b . rest)
+  (apply
+    (lambda seq
+      (apply > (map char->integer seq)))
+    a b rest))
+
+(define (char<=? a b . rest)
+  (apply
+    (lambda seq
+      (apply <= (map char->integer seq)))
+    a b rest))
+
+(define (char>=? a b . rest)
+  (apply
+    (lambda seq
+      (apply >= (map char->integer seq)))
+    a b rest))
+
+(define (char-ci=? a b . rest)
+  (apply char=?
+        (apply 
+          (lambda seq
+            (map char-upcase seq))
+          a b rest)))
+
+(define (char-ci<? a b . rest)
+  (apply char<?
+        (apply 
+          (lambda seq
+            (map char-upcase seq))
+          a b rest)))
+
+(define (char-ci>? a b . rest)
+  (apply char>?
+        (apply 
+          (lambda seq
+            (map char-upcase seq))
+          a b rest)))
+
+(define (char-ci>=? a b . rest)
+  (apply char>=?
+        (apply 
+          (lambda seq
+            (map char-upcase seq))
+          a b rest)))
+
+(define (char-ci<=? a b . rest)
+  (apply char<=?
+        (apply 
+          (lambda seq
+            (map char-upcase seq))
+          a b rest)))
+
 ; list functions
 (define (list? obj)
   (define (null-terminate? obj)

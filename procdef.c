@@ -1081,6 +1081,114 @@ static int gc_proc(object *params, object **result) {
     return 0;
 }
 
+static int char_is_alpha_proc(object *params, object **result) {
+    object *obj;
+
+    check_null(result);
+    check_arg1(params);
+
+    obj = car(params);
+    if (!is_character(obj)) {
+        return SC_E_ARG_TYPE;
+    }
+    *result = (isalpha(obj_cv(obj))) ? get_true_obj() : get_false_obj();
+    return 0;
+}
+
+static int char_is_num_proc(object *params, object **result) {
+    object *obj;
+
+    check_null(result);
+    check_arg1(params);
+
+    obj = car(params);
+    if (!is_character(obj)) {
+        return SC_E_ARG_TYPE;
+    }
+    *result = (isdigit(obj_cv(obj))) ? get_true_obj() : get_false_obj();
+    return 0;
+}
+
+static int char_is_space_proc(object *params, object **result) {
+    object *obj;
+
+    check_null(result);
+    check_arg1(params);
+    obj = car(params);
+    if (!is_character(obj)) {
+        return SC_E_ARG_TYPE;
+    }
+    *result = (isspace(obj_cv(obj))) ? get_true_obj() : get_false_obj();
+    return 0;
+}
+
+static int char_is_upper_proc(object *params, object **result) {
+    object *obj;
+
+    check_null(result);
+    check_arg1(params);
+
+    obj = car(params);
+    if (!is_character(obj)) {
+        return SC_E_ARG_TYPE;
+    }
+
+    *result = (isupper(obj_cv(obj))) ? get_true_obj() : get_false_obj();
+    return 0;
+}
+
+static int char_is_lower_proc(object *params, object **result) {
+    object *obj;
+
+    check_null(result);
+    check_arg1(params);
+
+    obj = car(params);
+    if (!is_character(obj)) {
+        return SC_E_ARG_TYPE;
+    }
+    *result = (islower(obj_cv(obj))) ? get_true_obj() : get_false_obj();
+    return 0;
+}
+
+static int char_upper_proc(object *params, object **result) {
+    object *obj;
+    int c;
+
+    check_null(result);
+    check_arg1(params);
+
+    obj = car(params);
+    if (!is_character(obj)) {
+        return SC_E_ARG_TYPE;
+    }
+    c = toupper(obj_cv(obj));
+    *result = make_character(c);
+    if (*result == NULL) {
+        return SC_E_NO_MEM;
+    }
+    return 0;
+}
+
+static int char_lower_proc(object *params, object **result) {
+    object *obj;
+    int c;
+
+    check_null(result);
+    check_arg1(params);
+
+    obj = car(params);
+    if (!is_character(obj)) {
+        return SC_E_ARG_TYPE;
+    }
+    c = tolower(obj_cv(obj));
+    *result = make_character(c);
+    if (*result == NULL) {
+        return SC_E_NO_MEM;
+    }
+    return 0;
+}
+
 #define DEFINE_LIST_PROC(name) \
     define_proc(#name, name ## _proc)
 
@@ -1117,6 +1225,14 @@ int init_primitive(object *env) {
     define_proc(">", is_number_greater_proc);
     define_proc("<=", is_number_less_equal_proc);
     define_proc(">=", is_number_greater_equal_proc);
+
+    define_proc("char-alphabetic?", char_is_alpha_proc);
+    define_proc("char-numeric?", char_is_num_proc);
+    define_proc("char-whitespace?", char_is_space_proc);
+    define_proc("char-upper-case?", char_is_upper_proc);
+    define_proc("char-lower-case?", char_is_lower_proc);
+    define_proc("char-upcase", char_upper_proc);
+    define_proc("char-downcase", char_lower_proc);
 
     define_proc("cons", cons_proc);
     DEFINE_LIST_PROC(car);
@@ -1162,6 +1278,7 @@ int init_primitive(object *env) {
     define_proc("interaction-environment", interaction_environment_proc);
     define_proc("null-environment", null_environment_proc);
     define_proc("base-environment", base_environment_proc);
+
     define_proc("eval", eval_proc);
     define_proc("apply", apply_proc);
 

@@ -1,7 +1,6 @@
 A small todo list:
 ---------------
 + rename files, remove "sc_" prefix **[DONE]**
-+ add string functions
 + add gc support **[DONE]**
 + add cache for integer objects **[DONE]**
 + add cache for character objects **[DONE]**
@@ -12,8 +11,10 @@ A small todo list:
 + add / primitive procedure **[DONE]**
 + add math primitive functions **[DONE]**
 + add character procedures **[DONE]**
-+ improve list procedures
 + add gcd, lcm procedures **[DONE]**
++ add (runtime) procedure
++ improve list procedures
++ add string functions
 + add vector support
 + macro support
 + call/cc

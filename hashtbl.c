@@ -18,11 +18,11 @@ typedef struct bucket {
 } bucket;
 
 
-hashtbl* hashtbl_new(create_fn fn) {
+hashtbl* hashtbl_new(create_fn create, tostr_fn tostr) {
     hashtbl *tbl;
     bucket *bucketp;
 
-    if (fn == NULL) {
+    if (create == NULL || tostr == NULL) {
         return NULL;
     }
 
@@ -41,7 +41,8 @@ hashtbl* hashtbl_new(create_fn fn) {
     memset(bucketp, 0, sizeof(bucket) * DEFAULT_BUCKET_NUM);
     tbl->bsize = DEFAULT_BUCKET_NUM;
     tbl->buckets = bucketp;
-    tbl->create = fn;
+    tbl->create = create;
+    tbl->tostr = tostr;
     return tbl;
 }
 
@@ -116,6 +117,55 @@ void hashtbl_remove(hashtbl *tbl, object *obj, char *sym) {
     }
 }
 
+/* on error return -1;
+ * return 1 if sym already exists, otherwise return 0 */
+int hashtbl_insert_obj(hashtbl *tbl, char *sym, object *obj) {
+    unsigned int h;
+    bucket *p;
+    node *np;
+    int i;
+
+    if (obj == NULL || tbl == NULL ||
+        tbl->create == NULL || tbl->tostr == NULL ) {
+        return -1;
+    }
+
+    h = hash(sym);
+    i = h % tbl->bsize;
+    p = (bucket*)(tbl->buckets) + i;
+    np = p->next;
+
+    while (np != NULL) {
+        if (np->hash == h && 
+            strcmp(sym, tbl->tostr(np->sym)) == 0) {
+            break;
+        }
+        np = np->next;
+    }
+
+    if (np == NULL) {
+        /* insert new */
+#ifdef DEBUG_HASHTBL
+        fprintf(stderr, "insert new node: %s\n", sym);
+#endif
+        np = sc_malloc(sizeof(node));
+        if (np == NULL) {
+            sc_log("%s", "no memory for hashtbl");
+            exit(1);
+        }
+        np->next = p->next;
+        p->next = np;
+        np->sym = obj;
+        np->hash = h;
+    } else {
+#ifdef DEBUG_HASHTBL
+        fprintf(stderr, "node already exists: %s\n", sym);
+#endif
+        return 1;
+    }
+    return 0;
+}
+
 object* hashtbl_insert(hashtbl *tbl, char *sym) {
     unsigned int h;
     object *sym_obj;
@@ -123,7 +173,7 @@ object* hashtbl_insert(hashtbl *tbl, char *sym) {
     node *np;
     int i;
 
-    if (tbl == NULL || tbl->create == NULL) {
+    if (tbl == NULL || tbl->create == NULL || tbl->tostr == NULL ) {
         return NULL;
     }
 
@@ -134,7 +184,7 @@ object* hashtbl_insert(hashtbl *tbl, char *sym) {
 
     while (np != NULL) {
         if (np->hash == h && 
-            strcmp(sym, obj_iv(np->sym)) == 0) {
+            strcmp(sym, tbl->tostr(np->sym)) == 0) {
             break;
         }
         np = np->next;
@@ -153,7 +203,7 @@ object* hashtbl_insert(hashtbl *tbl, char *sym) {
         np = sc_malloc(sizeof(node));
         if (np == NULL) {
             sc_log("%s", "no memory for hashtbl");
-            return NULL;
+            exit(1);
         }
         np->next = p->next;
         p->next = np;

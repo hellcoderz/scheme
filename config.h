@@ -34,7 +34,7 @@
 #define GC_THRESHOLD    256
 
 /* enable gc debugging info */
-/* #define GC_DEBUG_INFO */
+#define GC_DEBUG_INFO 
 
 #endif
 

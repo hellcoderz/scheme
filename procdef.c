@@ -8,6 +8,7 @@
 #include "sform.h"
 #include "repl.h"
 #include "ioproc.h"
+#include "strproc.h"
 #include "mathproc.h"
 #include "gc.h"
 
@@ -51,6 +52,8 @@ char* error_str(int err) {
             return "error while reading file";
         case SC_E_IO_INVL_PORT:
             return "invalid I/O port";
+        case SC_E_INVL_INDEX:
+            return "index out of bounds";
     }
     return NULL;
 }
@@ -911,6 +914,17 @@ static int is_list_equal(object *this, object *that) {
     return 0;
 }
 
+static int is_string_eqv(object *a, object *b) {
+    if (is_str_interned(a) && is_str_interned(b)) {
+        return a == b;
+    } else {
+        return strcmp(obj_sv(a), obj_sv(b)) == 0;
+    }
+
+    /* never here */
+    return 0;
+}
+
 static int is_eqv(object *a, object *b) {
     if (type(a) != type(b)) {
         return 0;
@@ -922,6 +936,9 @@ static int is_eqv(object *a, object *b) {
             return obj_rv(a) == obj_rv(b);
         case CHARACTER:
             return obj_cv(a) == obj_cv(b);
+        case STRING:
+            /* handle orphan string */
+            return is_string_eqv(a, b);
         default:
             return a == b;
     }
@@ -1290,6 +1307,10 @@ int init_primitive(object *env) {
         return ret;
     }
     ret = init_math_primitive(env);
+    if (ret != 0) {
+        return ret;
+    }
+    ret = init_str_primitive(env);
     return ret;
 }
 

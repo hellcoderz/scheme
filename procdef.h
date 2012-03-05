@@ -16,6 +16,7 @@ enum {
     SC_E_IO_READ,
     SC_E_IO_INVL_PORT,
     SC_E_LOAD,
+    SC_E_INVL_INDEX,
 };
 
 
@@ -29,6 +30,10 @@ enum {
     }
 #define check_arg1(p) \
     if (!is_empty_list(cdr(p))) { \
+        return SC_E_ARITY; \
+    }
+#define check_arg3(p) \
+    if (!is_empty_list(cdddr(p))) { \
         return SC_E_ARITY; \
     }
 

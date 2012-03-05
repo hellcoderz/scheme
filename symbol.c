@@ -26,6 +26,13 @@ static object* internal_make_symbol(char *sym) {
     return sym_obj;
 }
 
+static char* internal_tostr(object *obj) {
+    if (!is_symbol(obj)) {
+        return NULL;
+    }
+    return obj_iv(obj);
+}
+
 object* make_symbol(char *sym) {
     object *obj;
 
@@ -38,7 +45,7 @@ int is_symbol(object *obj) {
 }
 
 int symbol_init(void) {
-    symbols = hashtbl_new(internal_make_symbol);
+    symbols = hashtbl_new(internal_make_symbol, internal_tostr);
     if (symbols != NULL) {
         return 0;
     }

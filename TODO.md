@@ -14,7 +14,7 @@ A small todo list:
 + add gcd, lcm procedures **[DONE]**
 + add (runtime) procedure
 + improve list procedures
-+ add string functions
++ add string functions **[DONE]**
 + add vector support
 + macro support
 + call/cc

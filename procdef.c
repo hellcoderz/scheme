@@ -914,15 +914,8 @@ static int is_list_equal(object *this, object *that) {
     return 0;
 }
 
-static int is_string_eqv(object *a, object *b) {
-    if (is_str_interned(a) && is_str_interned(b)) {
-        return a == b;
-    } else {
-        return strcmp(obj_sv(a), obj_sv(b)) == 0;
-    }
-
-    /* never here */
-    return 0;
+static int is_string_equal(object *a, object *b) {
+    return strcmp(obj_sv(a), obj_sv(b)) == 0;
 }
 
 static int is_eqv(object *a, object *b) {
@@ -936,9 +929,6 @@ static int is_eqv(object *a, object *b) {
             return obj_rv(a) == obj_rv(b);
         case CHARACTER:
             return obj_cv(a) == obj_cv(b);
-        case STRING:
-            /* handle orphan string */
-            return is_string_eqv(a, b);
         default:
             return a == b;
     }
@@ -953,12 +943,11 @@ static int is_equal(object *a, object *b) {
     }
     if (is_pair(a)) {
         return is_list_equal(a, b);
-    } else {
-        return is_eqv(a, b);
+    } else if (is_string(a)) {
+        return is_string_equal(a, b);
     }
 
-    /* never here */
-    return 0;
+    return is_eqv(a, b);
 }
 
 static int is_eq_proc(object *params, object **result) {

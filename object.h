@@ -10,16 +10,6 @@
 #define RETURN '\r'
 #define SPACE ' '
 
-/* A string is ORPHAN if:
- * 1. it is modified by string procedures
- * 2. the result of this modification results in a
- *    string that already exists in string table
- *
- * We have to take care of ORPHAN_STR when comparing strings
- */
-#define INTERNED_STR 0
-#define ORPHAN_STR 1
-
 typedef enum {
 	FIXNUM,
     FLONUM,
@@ -64,7 +54,6 @@ typedef struct object {
         struct {
             char *buf;
             int len;
-            char state;
         } string;
         struct {
             struct object *car;
@@ -99,7 +88,6 @@ typedef struct object {
 #define obj_rv(p) (p->data.flonum.value) /* rational number */
 #define obj_sv(p) (p->data.string.buf)
 #define obj_slenv(p) (p->data.string.len)
-#define obj_ssv(p) (p->data.string.state)
 #define obj_pv(p) (p->data.pair)
 #define obj_iv(p) (p->data.symbol.value)    /* identifier */
 #define obj_fv(p) (p->data.primitive_proc.fn)
@@ -114,11 +102,7 @@ typedef struct object {
 #define gc_mark(p) ((p)->gc.mark)
 #define gc_chain(p) ((p)->gc.chain)
 
-#define is_str_interned(obj) \
-    (obj_ssv(obj) == INTERNED_STR)
-
 #define SIZEOF_OBJECT   sizeof(object)
-
 
 #define caar(obj)   car(car(obj))
 #define cadr(obj)   car(cdr(obj))
@@ -172,11 +156,7 @@ int is_character(object *obj);
 
 object* make_string(char *str);
 int is_string(object *obj);
-int string_init(void);
-void string_dispose(void);
 void string_free(object *obj);
-char* string_remove(object *obj);
-object* string_insert(object *obj);
 
 object* get_empty_list(void);
 int is_empty_list(object *obj);

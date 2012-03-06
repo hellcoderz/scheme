@@ -18,7 +18,6 @@ int init_obj(void) {
     CALL_WITH_CHECK(eof_init);
     CALL_WITH_CHECK(empty_list_init);
     CALL_WITH_CHECK(symbol_init);
-    CALL_WITH_CHECK(string_init);
     CALL_WITH_CHECK(sform_init);
     
     return 0;
@@ -26,7 +25,6 @@ int init_obj(void) {
 
 void dispose_obj(void) {
     symbol_dispose();
-    string_dispose();
     boolean_dispose();
     empty_list_dispose();
     eof_dispose();

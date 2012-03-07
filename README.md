@@ -12,13 +12,14 @@ Writing a Scheme interpreter is easy, and more importantly,
 it is fun.
 
 
-Features included:
+Features currently included:
 -----------------
 + lambda, of course
 + integer(32 bit), floating-point numbers, string, symbol, boolean,
 character, pair
 + basic mathematical functions
 + basic input/output support
++ basic string/character procedures
 + cond, if, let, begin, and, or, define, set!, apply, eval...
 + var-arg
 + a small core library

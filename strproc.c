@@ -167,6 +167,7 @@ static int string_set_proc(object *params, object **result) {
         return SC_E_INVL_INDEX;
     }
 
+    str = obj_sv(str_obj);
     str[i] = obj_cv(char_obj);
     *result = str_obj;
     return 0;
@@ -440,7 +441,7 @@ static int substring_proc(object *params, object **result) {
     if (buf == NULL) {
         return SC_E_NO_MEM;
     }
-    strncpy(buf, str, buflen); /* no NUL at end */
+    strncpy(buf, str + start, buflen); /* no NUL at end */
     buf[buflen] = '\0';
     *result = make_string(buf);
     sc_free(buf);

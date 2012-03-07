@@ -36,6 +36,10 @@ enum {
     if (!is_empty_list(cdddr(p))) { \
         return SC_E_ARITY; \
     }
+#define check_arg0(p) \
+    if (!is_empty_list(p)) { \
+        return SC_E_ARITY; \
+    }
 
 int init_primitive(object *env);
 char* error_str(int err);

@@ -14,7 +14,7 @@ else
 endif
 
 scheme: $(OBJS)
-	cc $^ -lm -o scheme
+	cc $^ -lm -lrt -o scheme
 
 %.o: %.c
 	cc $(CFLAG) $< -o $@

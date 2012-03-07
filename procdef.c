@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 #include <stdio.h>
 #include "object.h"
 #include "procdef.h"
@@ -11,6 +12,8 @@
 #include "strproc.h"
 #include "mathproc.h"
 #include "gc.h"
+
+extern double startup_time;
 
 int env_define_proc(char *sym, prim_proc fn, object *env) {
     object *sym_obj, *proc_obj;
@@ -1195,6 +1198,38 @@ static int char_lower_proc(object *params, object **result) {
     return 0;
 }
 
+static int runtime_proc(object *params, object **result) {
+    struct timespec ts;
+    clockid_t clock = CLOCK_MONOTONIC;
+    double now, delta;
+
+    check_null(result);
+    check_arg0(params);
+
+    clock_gettime(clock, &ts);
+    now = ts.tv_sec * 1000.0 + ts.tv_nsec / 1000000.0;
+    delta = now - startup_time;
+    *result = make_flonum(delta);
+    if (*result == NULL) {
+        return SC_E_NO_MEM;
+    }
+    return 0;
+}
+
+static int random_proc(object *params, object **result) {
+    long rnd;
+
+    check_null(result);
+    check_arg0(params);
+
+    rnd = random();
+    *result = make_fixnum(rnd);
+    if (*result == NULL) {
+        return SC_E_NO_MEM;
+    }
+    return 0;
+}
+
 #define DEFINE_LIST_PROC(name) \
     define_proc(#name, name ## _proc)
 
@@ -1290,6 +1325,9 @@ int init_primitive(object *env) {
 
     define_proc("gc", gc_proc);
     define_proc("gc-summary", gc_summary_proc);
+
+    define_proc("runtime", runtime_proc);
+    define_proc("random", random_proc);
 
     ret = init_io_primitive(env);
     if (ret != 0) {

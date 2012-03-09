@@ -369,6 +369,40 @@ static int write_proc(object *params, object **result) {
     return 0;
 }
 
+static int display_proc(object *params, object **result) {
+    object *port, *obj;
+    FILE *out;
+
+    check_null(result);
+    if (!is_empty_list(cdr(params)) &&
+        !is_empty_list(cddr(params))) {
+        return SC_E_ARITY;
+    }
+
+    obj = car(params);
+    port = cadr(params);
+    if (port == NULL) {
+        out = stdout;
+    } else if (is_output_port(port)){
+        out = obj_opv(port);
+    } else {
+        return SC_E_ARG_TYPE;
+    }
+    if (out == NULL) {
+        return SC_E_IO_INVL_PORT;
+    }
+
+    if (is_string(obj)) {
+        fprintf(out, "%s", obj_sv(obj));
+    } else if (is_character(obj)) {
+        fprintf(out, "%c", obj_cv(obj));
+    } else {
+        sc_write(out, obj);
+    }
+    *result = get_nrv_symbol();
+    return 0;
+}
+
 static int error_proc(object *params, object **result) {
     /* this function won't return */
     object *first, *rest;
@@ -396,6 +430,7 @@ int init_io_primitive(object *env) {
 
     define_proc("write", write_proc);
     define_proc("write-char", write_char_proc);
+    define_proc("display", display_proc);
     define_proc("output-port?", is_output_port_proc);
     define_proc("open-output-port", open_output_port_proc);
     define_proc("close-output-port", close_output_port_proc);

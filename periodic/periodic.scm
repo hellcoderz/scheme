@@ -91,7 +91,11 @@
     (let ((word (read-dict-word in)))
       (cond
         ((eof-object? word) 
-         (write periodic) (write ",") (write total) (write ",") (/ periodic total))
+         (display periodic)
+         (display ",")
+         (display total)
+         (display ",") 
+         (/ periodic total))
         (else
           (let ((i (if (periodic-word? table word) 1 0)))
             (iter (inc total)
@@ -104,9 +108,9 @@
 
 (define (timeit fn . args)
   (let ((start (runtime)))
-    (write (apply fn args))
-    (write ",")
-    (write (- (runtime) start))))
+    (display (apply fn args))
+    (display ",")
+    (display (- (runtime) start))))
 
 (define (runtest periodic-table dict)
   (let ((tbl (read-periodic-table periodic-table)))

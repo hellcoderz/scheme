@@ -7,14 +7,20 @@ OBJS = eval.o  mem.o reader.o fixnum.o charcache.o \
 	mathproc.o strproc.o
 
 CFLAG = -Wall -c
+LFLAG = -lm -lrt
 ifeq ($(DEBUG), 1)
 	CFLAG += -g
 else
 	CFLAG += -O2
 endif
 
+ifeq ($(PROFILE), 1)
+	CFLAG += -pg
+	LFLAG += -pg
+endif
+
 scheme: $(OBJS)
-	cc $^ -lm -lrt -o scheme
+	cc $^ $(LFLAG) -o scheme
 
 %.o: %.c
 	cc $(CFLAG) $< -o $@

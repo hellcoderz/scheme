@@ -25,7 +25,7 @@ static int is_tagged_list(object *exp, object *tag) {
 
     if (is_pair(exp)) {
         car_obj = car(exp);
-        return is_symbol(car_obj) && car_obj == tag;
+        return car_obj == tag;
     }
     return 0;
 }

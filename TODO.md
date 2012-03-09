@@ -12,9 +12,10 @@ A small todo list:
 + add math primitive functions **[DONE]**
 + add character procedures **[DONE]**
 + add gcd, lcm procedures **[DONE]**
-+ add (runtime) procedure
++ add (runtime) procedure **[DONE]**
 + improve list procedures
 + add string functions **[DONE]**
 + add vector support
++ add (display) procedure
 + macro support
 + call/cc

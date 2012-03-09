@@ -149,6 +149,29 @@
             (map char-upcase seq))
           a b rest)))
 
+; io functions
+(define (newline . args)
+  (apply display
+         #\newline args))
+
+(define (open-input-file . args)
+  (apply open-input-port args))
+
+(define (open-output-file . args)
+  (apply open-output-port args))
+
+(define (call-with-input-file file proc)
+  (let ((fin (open-input-port file)))
+    (let ((result (proc fin)))
+      (close-input-port fin)
+      result)))
+
+(define (call-with-output-file file proc)
+  (let ((fout (open-output-port file)))
+    (let ((result (proc fout)))
+      (close-output-port fout)
+      result)))
+
 ; list functions
 (define (list? obj)
   (define (null-terminate? obj)

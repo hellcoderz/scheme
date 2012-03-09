@@ -16,6 +16,7 @@ A small todo list:
 + improve list procedures
 + add string functions **[DONE]**
 + add vector support
-+ add (display) procedure
++ add (display) procedure **[DONE]**
++ improve io support **[DONE]**
 + macro support
 + call/cc

@@ -174,14 +174,9 @@
 
 ; list functions
 (define (list? obj)
-  (define (null-terminate? obj)
-    (cond
-      ((null? obj) #t)
-      ((pair? obj) (null-terminate? (cdr obj)))
-      (else #f)))
   (cond
     ((null? obj) #t)
-    ((pair? obj) (null-terminate? obj))
+    ((pair? obj) (list? (cdr obj)))
     (else #f)))
 
 (define (length seq)
@@ -192,12 +187,14 @@
   (if (list? seq)
       (iter seq 0)))
 
-(define (append seq obj)
-  (if (list? seq)
-      (if (null? seq)
-        obj
-        (cons (car seq)
-              (append (cdr seq) obj)))))
+(define (append seq . rest)
+  (define (append-two x y)
+    (cond
+      ((null? x) y)
+      (else (cons (car x)
+                  (append-two (cdr x) y)))))
+  (reduce-left append-two '() (cons seq rest)))
+
 
 (define (reverse seq)
   (define (iter in out)
@@ -239,6 +236,91 @@
   (define tail (list-tail seq k))
   (if (pair? tail)
     (car tail)))
+
+(define (list-copy seq)
+  (cond
+    ((null? seq) '())
+    (else (cons (car seq) (list-copy (cdr seq))))))
+
+(define (dotted-list? seq)
+  (cond
+    ((null? seq) #f)
+    ((not (pair? seq)) #t)
+    (else (dotted-list? (cdr seq)))))
+
+(define (circular-list? seq)
+  (define (two-more? seq)
+    (cond
+      ((null? seq) #f)
+      ((null? (cdr seq)) #f)
+      ((null? (cddr seq)) #f)
+      (else #t)))
+  (define (iter hare tortoise)
+    (cond
+      ((null? hare) #f)
+      ((not (two-more? hare)) #f)
+      ((eq? (car hare) (car tortoise)) #t)
+      (else (iter (cddr hare) (cdr tortoise)))))
+  (cond
+    ((two-more? seq) (iter (cddr seq) seq))
+    (else #f)))
+
+(define (sublist seq start end)
+  (define (iter seq i)
+    (cond
+      ((null? seq) '())
+      ((< i start) (iter (cdr seq) (inc i)))
+      ((>= i end) '())
+      (else (cons (car seq)
+                  (iter (cdr seq) (inc i))))))
+  (cond
+    ((< start 0) '())
+    ((> start end) '())
+    ((> end (length seq)) '())
+    (else (iter seq 0))))
+
+(define (list-head seq k)
+  (sublist seq 0 k))
+
+(define (last-pair seq)
+  (cond
+    ((not (pair? seq)) seq)
+    ((pair? (cdr seq)) (last-pair (cdr seq)))
+    (else seq)))
+
+(define (except-last-pair seq)
+  (cond
+    ((not (pair? seq)) seq)
+    ((not (pair? (cdr seq))) '())
+    (else (cons (car seq) (except-last-pair (cdr seq))))))
+
+(define (filter pred seq)
+  (cond
+    ((null? seq) '())
+    ((pred (car seq)) (cons (car seq)
+                            (filter pred (cdr seq))))
+    (else (filter pred (cdr seq)))))
+
+(define (remove pred seq)
+  (cond
+    ((null? seq) '())
+    ((pred (car seq)) (remove pred (cdr seq)))
+    (else (cons (car seq)
+                (remove pred (cdr seq))))))
+
+(define (partition pred seq)
+  (list
+    (filter pred seq)
+    (remove pred seq)))
+
+(define (delq elem seq)
+  (remove (lambda (obj) (eq? obj elem)) seq))
+
+(define (delv elem seq)
+  (remove (lambda (obj) (eqv? obj elem)) seq))
+
+(define (delete elem seq)
+  (remove (lambda (obj) (equal? obj elem)) seq))
 
 (define (reduce-left fn initial seq)
   (define (reduce-iter fn val rest)

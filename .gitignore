@@ -1,4 +1,5 @@
 *.o
 scheme
+gmon.out
 test/test
 test/*.o

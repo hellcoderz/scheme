@@ -1,0 +1,176 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  us/call  us/call  name    
+ 26.80     21.20    21.20 288353799     0.07     0.07  cdr
+ 18.19     35.59    14.39 2849597535     0.01     0.01  car
+ 12.69     45.63    10.04 41973669     0.24     0.79  lookup_variable
+  9.51     53.15     7.52 2404823736     0.00     0.00  is_empty_list
+  6.36     58.18     5.03 31073875     0.16     2.26  sc_eval
+  2.76     60.36     2.18 330015186     0.01     0.02  is_tagged_list
+  2.64     62.45     2.09 419367251     0.00     0.00  is_pair
+  2.53     64.45     2.00 70509201     0.03     0.12  gc_alloc
+  2.11     66.12     1.67 247976376     0.01     0.01  stack_pop
+  1.90     67.62     1.50 247976376     0.01     0.01  stack_push
+  1.61     68.89     1.27    17757    71.52   353.92  gc
+  1.58     70.14     1.25   547928     2.28     9.15  mark_object
+  1.50     71.33     1.19 247976376     0.00     0.01  gc_stack_root_pop
+  1.19     72.27     0.94 247976376     0.00     0.01  gc_stack_root_push
+  0.97     73.04     0.77 23376578     0.03     0.38  list_of_values
+  0.59     73.51     0.47 93510683     0.01     0.01  is_fixnum
+  0.59     73.98     0.47 70129734     0.01     0.01  is_primitive_proc
+  0.51     74.38     0.40 82824610     0.00     0.00  is_character
+  0.49     74.77     0.39 82844275     0.00     0.00  is_flonum
+  0.48     75.15     0.38 82831048     0.00     0.00  is_boolean
+  0.42     75.48     0.33 90431568     0.00     0.00  is_string
+  0.42     75.81     0.33 67383087     0.00     0.13  cons
+  0.37     76.10     0.29 82774270     0.00     0.00  is_symbol
+  0.29     76.33     0.23 26575130     0.01     0.01  get_empty_list
+  0.28     76.55     0.22 70509201     0.00     0.12  alloc_object
+  0.25     76.75     0.20 23376578     0.01     0.02  is_apply
+  0.24     76.94     0.19 82714555     0.00     0.00  is_eof_object
+  0.24     77.13     0.19 40740734     0.00     0.00  get_define_symbol
+  0.18     77.27     0.14 41973669     0.00     0.79  lookup_variable_val
+  0.16     77.40     0.13 23376578     0.01     0.01  is_eval
+  0.14     77.51     0.11 43821578     0.00     0.00  get_begin_symbol
+  0.14     77.62     0.11 23406051     0.00     0.00  get_or_symbol
+  0.14     77.73     0.11 22461296     0.00     0.00  is_compound_proc
+  0.14     77.84     0.11  3083940     0.04     0.13  string_length_proc
+  0.13     77.94     0.10 40744291     0.00     0.00  get_quote_symbol
+  0.13     78.04     0.10  9400391     0.01     0.28  extend_env
+  0.13     78.14     0.10  1590069     0.06     0.53  bindings_values
+  0.11     78.23     0.09 40739926     0.00     0.00  get_if_symbol
+  0.10     78.31     0.08 37627857     0.00     0.00  get_lambda_symbol
+  0.09     78.38     0.07 40740734     0.00     0.00  get_set_symbol
+  0.09     78.45     0.07  3060746     0.02     0.11  car_proc
+  0.06     78.50     0.05 25006629     0.00     0.00  get_cond_symbol
+  0.06     78.55     0.05  3060750     0.02     0.02  is_number
+  0.06     78.60     0.05  1530373     0.03     0.27  string_ci_equal_proc
+  0.05     78.64     0.04  9475802     0.00     0.08  is_last_exp
+  0.05     78.68     0.04  1608589     0.02     0.30  make_lambda
+  0.05     78.72     0.04  1590069     0.03     0.42  bindings_variables
+  0.05     78.76     0.04  1542782     0.03     0.11  is_null_proc
+  0.05     78.80     0.04  1528358     0.03     0.19  cdr_proc
+  0.05     78.84     0.04  1497353     0.03     0.64  substring_proc
+  0.04     78.87     0.03 24996120     0.00     0.00  get_let_symbol
+  0.04     78.90     0.03 23406051     0.00     0.00  get_and_symbol
+  0.04     78.93     0.03  4714662     0.01     0.01  is_true
+  0.04     78.96     0.03  3090574     0.01     0.01  make_fixnum
+  0.04     78.99     0.03  1608589     0.02     0.25  make_compound_proc
+  0.03     79.01     0.02  3105367     0.01     0.01  number_to_double
+  0.03     79.03     0.02  1530373     0.01     0.26  is_number_greater_proc
+  0.03     79.05     0.02  1530373     0.01     0.25  number_compare
+  0.03     79.07     0.02  1500903     0.01     0.14  make_string
+  0.03     79.09     0.02    29223     0.68     0.92  is_eq_proc
+  0.01     79.10     0.01  3012892     0.00     0.00  sc_malloc
+  0.01     79.11     0.01    36423     0.27     0.36  char_is_space_proc
+  0.00     79.11     0.00  4641228     0.00     0.00  get_false_obj
+  0.00     79.11     0.00  3090574     0.00     0.00  intcache_get
+  0.00     79.11     0.00  1511712     0.00     0.00  sc_free
+  0.00     79.11     0.00  1500605     0.00     0.00  string_free
+  0.00     79.11     0.00   530171     0.00     0.00  mark_stack_root
+  0.00     79.11     0.00   103148     0.00     0.00  get_true_obj
+  0.00     79.11     0.00    68555     0.00     0.00  is_input_port
+  0.00     79.11     0.00    68551     0.00     0.00  charcache_get
+  0.00     79.11     0.00    68551     0.00     0.02  make_character
+  0.00     79.11     0.00    45978     0.00     0.00  get_else_symbol
+  0.00     79.11     0.00    45869     0.00     0.00  set_cdr
+  0.00     79.11     0.00    37819     0.00     0.11  peek_char_proc
+  0.00     79.11     0.00    36288     0.00     0.00  get_nrv_symbol
+  0.00     79.11     0.00    32201     0.00     0.00  sstream_append
+  0.00     79.11     0.00    30734     0.00     0.11  read_char_proc
+  0.00     79.11     0.00    28221     0.00     0.13  sequence_to_exp
+  0.00     79.11     0.00    27193     0.00     0.23  cons_proc
+  0.00     79.11     0.00    18661     0.00     0.90  define_variable
+  0.00     79.11     0.00    18661     0.00     0.00  set_car
+  0.00     79.11     0.00    17758     0.00     0.00  get_repl_env
+  0.00     79.11     0.00    17757     0.00   273.23  stack_for_each
+  0.00     79.11     0.00    14902     0.00     0.24  string_is_equal_proc
+  0.00     79.11     0.00    14290     0.00     0.08  is_eof_object_proc
+  0.00     79.11     0.00    10930     0.00     0.00  peek
+  0.00     79.11     0.00    10509     0.00     1.78  expand_clauses
+  0.00     79.11     0.00     6610     0.00     0.37  add_proc
+  0.00     79.11     0.00     6089     0.00     0.00  skip_whitespace
+  0.00     79.11     0.00     4690     0.00     0.00  sstream_cstr
+  0.00     79.11     0.00     4690     0.00     0.00  sstream_dispose
+  0.00     79.11     0.00     4690     0.00     0.01  sstream_new
+  0.00     79.11     0.00     3541     0.00     0.94  list_to_string_proc
+  0.00     79.11     0.00     1859     0.00     0.03  sc_read
+  0.00     79.11     0.00     1393     0.00     0.09  char_is_alpha_proc
+  0.00     79.11     0.00     1269     0.00     0.03  hashtbl_insert
+  0.00     79.11     0.00     1269     0.00     0.03  make_symbol
+  0.00     79.11     0.00     1180     0.00     0.00  is_delimiter
+  0.00     79.11     0.00      992     0.00     0.00  internal_tostr
+  0.00     79.11     0.00      685     0.00     0.50  parse_list
+  0.00     79.11     0.00      277     0.00     0.12  internal_make_symbol
+  0.00     79.11     0.00      141     0.00     1.09  env_define_proc
+  0.00     79.11     0.00      141     0.00     0.12  make_primitive_proc
+  0.00     79.11     0.00      118     0.00     0.00  list_proc
+  0.00     79.11     0.00       22     0.00     0.00  make_boolean
+  0.00     79.11     0.00        7     0.00     0.18  display_proc
+  0.00     79.11     0.00        6     0.00     0.02  sc_write
+  0.00     79.11     0.00        5     0.00     0.00  get_eof_object
+  0.00     79.11     0.00        4     0.00     0.12  make_flonum
+  0.00     79.11     0.00        2     0.00     0.08  close_input_port_proc
+  0.00     79.11     0.00        2     0.00     0.12  make_input_port
+  0.00     79.11     0.00        2     0.00     0.21  open_input_port_proc
+  0.00     79.11     0.00        2     0.00     0.12  runtime_proc
+  0.00     79.11     0.00        1     0.00     0.00  boolean_dispose
+  0.00     79.11     0.00        1     0.00     0.01  boolean_init
+  0.00     79.11     0.00        1     0.00     0.00  charcache_init
+  0.00     79.11     0.00        1     0.00     0.42  div_proc
+  0.00     79.11     0.00        1     0.00     0.00  empty_list_dispose
+  0.00     79.11     0.00        1     0.00     0.00  empty_list_init
+  0.00     79.11     0.00        1     0.00     0.00  eof_dispose
+  0.00     79.11     0.00        1     0.00     0.00  eof_init
+  0.00     79.11     0.00        1     0.00     0.00  exit_proc
+  0.00     79.11     0.00        1     0.00     0.00  extend_freelist
+  0.00     79.11     0.00        1     0.00     0.00  hashtbl_dispose
+  0.00     79.11     0.00        1     0.00     0.01  hashtbl_new
+  0.00     79.11     0.00        1     0.00    16.41  init_io_primitive
+  0.00     79.11     0.00        1     0.00    25.16  init_math_primitive
+  0.00     79.11     0.00        1     0.00   131.29  init_primitive
+  0.00     79.11     0.00        1     0.00    22.98  init_str_primitive
+  0.00     79.11     0.00        1     0.00     0.00  intcache_dispose
+  0.00     79.11     0.00        1     0.00     0.00  intcache_init
+  0.00     79.11     0.00        1     0.00    90.98  load_proc
+  0.00     79.11     0.00        1     0.00   154.58  make_base_env
+  0.00     79.11     0.00        1     0.00     0.29  make_null_env
+  0.00     79.11     0.00        1     0.00     0.09  normalize_apply_operands
+  0.00     79.11     0.00        1     0.00     0.00  port_free
+  0.00     79.11     0.00        1     0.00     0.00  repl_exit
+  0.00     79.11     0.00        1     0.00     0.00  sc_realloc
+  0.00     79.11     0.00        1     0.00     0.00  stack_dispose
+  0.00     79.11     0.00        1     0.00     0.01  stack_new
+  0.00     79.11     0.00        1     0.00     0.37  sub_proc
+  0.00     79.11     0.00        1     0.00     0.00  symbol_dispose
+  0.00     79.11     0.00        1     0.00     0.01  symbol_init
+  0.00     79.11     0.00        1     0.00     0.00  try_character
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+ 
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this 
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.

@@ -27,7 +27,28 @@ character, pair
 + You should be able to use this Scheme interpreter to run all
 codes in *The Little Schemer*.
 
-There is a small todo list, see **TODO.md.**
+Todo list:
+---------------
++ rename files, remove "sc" prefix **[DONE]**
++ add gc support **[DONE]**
++ add cache for integer objects **[DONE]**
++ add cache for character objects **[DONE]**
++ add floating point support **[DONE]**
++ add var-arg support **[DONE]**
++ improve logger **[DONE]**
++ modify equal? eq? eqv? **[DONE]**
++ add / primitive procedure **[DONE]**
++ add math primitive functions **[DONE]**
++ add character procedures **[DONE]**
++ add gcd, lcm procedures **[DONE]**
++ add (runtime) procedure **[DONE]**
++ add more list procedures **[DONE]**
++ add string functions **[DONE]**
++ add vector support
++ add (display) procedure **[DONE]**
++ improve io support **[DONE]**
++ macro support
++ call/cc
 
 Thanks for *Peter Michaux's* excellent 
 [introduction series.](http://peter.michaux.ca/articles/scheme-from-scratch-introduction)

@@ -69,6 +69,9 @@
   (let ((d (gcd a b)))
     (* a (quotient b d))))
 
+(define (random-in-range low high)
+  (+ low (remainder (random) (- high low))))
+
 
 ; boolean functions
 (define (false? b)
@@ -195,6 +198,15 @@
                   (append-two (cdr x) y)))))
   (reduce-left append-two '() (cons seq rest)))
 
+(define (append! seq . rest)
+  (reduce-right
+    (lambda (x y)
+      (cond
+        ((null? x) y)
+        (else (set-cdr! (last-pair x) y) x)))
+    '()
+    (cons seq rest)))
+
 
 (define (reverse seq)
   (define (iter in out)
@@ -204,18 +216,26 @@
   (if (list? seq)
       (iter seq '())))
 
-(define (map fn seq)
-  (if (null? seq)
-    '()
-    (cons (fn (car seq))
-          (map fn (cdr seq)))))
+(define (map proc seq . rest)
+  (define (map1 fn seq)
+    (cond
+      ((null? seq) '())
+      (else (cons (fn (car seq))
+                  (map1 fn (cdr seq))))))
+  (cond
+    ((null? seq) '())
+    (else (cons (apply proc (map1 car (cons seq rest)))
+                (apply map proc (cdr seq) (map1 cdr rest))))))
 
-(define (for-each fn seq)
-  (if (null? seq)
-    #t
-    (begin
-      (fn (car seq))
-      (for-each fn (cdr seq)))))
+(define (append-map proc seq . rest)
+  (apply append (apply map proc seq rest)))
+
+(define (for-each proc seq . rest)
+  (cond
+    ((null? seq) #t)
+    (else
+      (apply proc (car seq) (map car rest))
+      (apply for-each proc (cdr seq) (map cdr rest)))))
 
 (define (list-tail seq k)
   (define (at-least-k? seq k len)
@@ -322,18 +342,141 @@
 (define (delete elem seq)
   (remove (lambda (obj) (equal? obj elem)) seq))
 
+(define (find pred seq)
+  (cond
+    ((null? seq) #f)
+    ((pred (car seq)) (car seq))
+    (else (find pred (cdr seq)))))
+
+(define (find-tail pred seq)
+  (cond
+    ((null? seq) #f)
+    ((pred (car seq)) seq)
+    (else (find-tail pred (cdr seq)))))
+
+(define (member-procedure pred)
+  (lambda (obj seq)
+    (cond
+      ((null? seq) #f)
+      ((pred obj (car seq)) seq)
+      (else (maker obj (cdr seq))))))
+
+(define memq (member-procedure eq?))
+
+(define memv (member-procedure eqv?))
+
+(define member (member-procedure equal?))
+
 (define (reduce-left fn initial seq)
-  (define (reduce-iter fn val rest)
+  (define (reduce-iter val rest)
     (if (null? rest)
       val
       (reduce-iter
-        fn
         (fn val (car rest))
         (cdr rest))))
   (cond
     ((null? seq) initial)
     ((null? (cdr seq)) (car seq))
     (else (reduce-iter
-            fn
             (fn (car seq) (cadr seq))
             (cddr seq)))))
+
+(define (reduce-right fn initial seq)
+  (define (iter seq)
+    (cond
+      ((null? (cddr seq)) (fn (car seq)
+                              (cadr seq)))
+      (else (fn (car seq)
+                (iter (cdr seq))))))
+  (cond
+    ((null? seq) initial)
+    ((null? (cdr seq)) (car seq))
+    (else (iter seq))))
+
+(define (fold-left fn initial seq)
+  (define (iter val rest)
+    (cond
+      ((null? rest) val)
+      (else (iter (fn val (car rest))
+                  (cdr rest)))))
+  (cond
+    ((null? seq) initial)
+    (else (iter (fn initial (car seq))
+                (cdr seq)))))
+
+(define (fold-right fn initial seq)
+  (define (iter seq)
+    (cond
+      ((null? (cdr seq)) (fn (car seq) initial))
+      (else (fn (car seq)
+                (iter (cdr seq))))))
+  (cond
+    ((null? seq) initial)
+    (else (iter seq))))
+
+(define (any pred seq . rest)
+  (define (any1 pred seq)
+    (if (null? seq) #f
+      (let ((val (pred (car seq))))
+        (if val val
+          (any1 pred (cdr seq))))))
+  (let ((args (cons seq rest)))
+    (cond
+      ((any1 null? args) #f)
+      ((apply pred (map car args)) #t)
+      (else (apply any pred (map cdr args))))))
+
+(define (every pred seq . rest)
+  (define (iter args last-val)
+    (if (any null? args)
+      last-val
+      (let ((val (apply pred (map car args))))
+        (if (not val)
+          #f
+          (iter (map cdr args) val)))))
+  (iter (cons seq rest) #t))
+
+(define (circular-list . objs)
+  (cond
+    ((null? objs)
+     (let ((seq (list '())))
+       (set-cdr! seq seq)
+       seq))
+    (else
+      (let ((pair (last-pair objs)))
+        (set-cdr! pair objs)
+        pair))))
+
+(define (quick-sort seq proc)
+  (cond
+    ((null? seq) '())
+    ((null? (cdr seq)) seq)
+    (else
+      (let ((rnd (list-ref seq
+                   (random-in-range 0 (length seq)))))
+        (append
+          (quick-sort (filter (lambda (e) (proc e rnd)) seq) proc)
+          (filter (lambda (e) (not (or (proc e rnd) (proc rnd e)))) seq)
+          (quick-sort (filter (lambda (e) (proc rnd e)) seq) proc))))))
+
+(define (merge-sort seq proc)
+  (define (merge x y)
+    (cond
+      ((null? x) y)
+      ((null? y) x)
+      ((proc (car x) (car y)) (cons (car x) (merge (cdr x) y)))
+      ((proc (car y) (car x)) (cons (car y) (merge x (cdr y))))
+      (else (cons (car x)
+                  (cons (car y) (merge (cdr x) (cdr y)))))))
+  (cond
+    ((null? seq) '())
+    ((null? (cdr seq)) seq)
+    (else
+      (let ((len (length seq)))
+        (let ((mid (quotient len 2)))
+          (merge
+            (merge-sort (sublist seq 0 mid) proc)
+            (merge-sort (sublist seq mid len) proc)))))))
+
+(define sort merge-sort)
+

@@ -11,7 +11,7 @@ LFLAG = -lm -lrt
 ifeq ($(DEBUG), 1)
 	CFLAG += -g
 else
-	CFLAG += -O2
+	CFLAG += -O3
 endif
 
 ifeq ($(PROFILE), 1)

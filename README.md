@@ -17,12 +17,12 @@ Features currently included:
 + lambda, of course
 + integer(32 bit), floating-point numbers, string, symbol, boolean,
 character, pair
-+ basic mathematical functions
++ basic number/mathematical functions
 + basic input/output support
 + basic string/character procedures
++ most list procedures in MIT Scheme
 + cond, if, let, begin, and, or, define, set!, apply, eval...
 + var-arg
-+ a small core library
 + mark-sweep garbage collector
 + You should be able to use this Scheme interpreter to run all
 codes in *The Little Schemer*.
@@ -44,9 +44,10 @@ Todo list:
 + add (runtime) procedure **[DONE]**
 + add more list procedures **[DONE]**
 + add string functions **[DONE]**
-+ add vector support
 + add (display) procedure **[DONE]**
 + improve io support **[DONE]**
++ add vector support
++ rewrite environment using rbtree(variable lookup is too slow)
 + macro support
 + call/cc
 

@@ -22,16 +22,16 @@
 
 
 /* 1024 objects in a segment */
-#define SEGMENT_SIZE    1024 * 8
+#define SEGMENT_SIZE    1024 * 128
 
 /* default number of segments in heap */
-#define DEFAULT_HEAP_SIZE   64
+#define DEFAULT_HEAP_SIZE   8
 
 /* extend free_list if availale objects is less than this */
-#define EXTEND_THRESHOLD    2048
+#define EXTEND_THRESHOLD    1024 * 32
 
 /* triger gc if available objects is less than this */
-#define GC_THRESHOLD    1024 
+#define GC_THRESHOLD    1024 * 5 
 
 /* enable gc debugging info */
 /* #define GC_DEBUG_INFO */

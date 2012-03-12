@@ -98,6 +98,25 @@ static int write_pair(FILE *out, object *val) {
     return 0;
 }
 
+int write_vector(FILE *out, object *obj) {
+    int i, len, ret;
+    object **buf;
+
+    len = obj_vsv(obj);
+    buf = obj_vav(obj);
+    for (i = 0; i < len - 1; i++) {
+        ret = sc_write(out, buf[i]);
+        if (ret != 0) {
+            return ret;
+        }
+        fprintf(out, " ");
+    }
+    if (len > 0) {
+        sc_write(out, buf[len-1]);
+    }
+    return 0;
+}
+
 int sc_write(FILE *out, object *val) {
     int ret = 0;
 
@@ -122,6 +141,10 @@ int sc_write(FILE *out, object *val) {
     } else if (is_pair(val)) {
         fprintf(out, "(");
         ret = write_pair(out, val);
+        fprintf(out, ")");
+    } else if (is_vector(val)) {
+        fprintf(out, "#(");
+        ret = write_vector(out, val);
         fprintf(out, ")");
     } else if (is_symbol(val)) {
         fprintf(out, "%s", obj_iv(val));

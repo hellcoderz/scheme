@@ -24,6 +24,7 @@ typedef enum {
     INPUT_PORT,
     OUTPUT_PORT,
     EOF_OBJECT,
+    VECTOR,
 } object_type;
 
 struct object;
@@ -63,6 +64,10 @@ typedef struct object {
             char *value;
         } symbol;
         struct {
+            struct object **array;
+            int size;
+        } vector;
+        struct {
             prim_proc fn;
         } primitive_proc;
         struct {
@@ -88,6 +93,8 @@ typedef struct object {
 #define obj_rv(p) (p->data.flonum.value) /* rational number */
 #define obj_sv(p) (p->data.string.buf)
 #define obj_slenv(p) (p->data.string.len)
+#define obj_vav(p) (p->data.vector.array)
+#define obj_vsv(p) (p->data.vector.size)
 #define obj_pv(p) (p->data.pair)
 #define obj_iv(p) (p->data.symbol.value)    /* identifier */
 #define obj_fv(p) (p->data.primitive_proc.fn)
@@ -169,6 +176,10 @@ object* car(object *pair);
 object* cdr(object *pair);
 int set_car(object *pair, object *car);
 int set_cdr(object *pair, object *cdr);
+
+int is_vector(object *obj);
+object* make_vector(object **arr, int size);
+void vector_free(object *obj);
 
 object* make_symbol(char *sym);
 int is_symbol(object *obj);

@@ -8,6 +8,7 @@
 #include "sstream.h"
 #include "sform.h"
 #include "gc.h"
+#include "objstream.h"
 
 static int is_delimiter(int c) {
     return isspace(c) || c == EOF ||
@@ -94,7 +95,7 @@ static int is_number_start(int c, int ahead) {
 }
 
 static int is_boolean_start(int c, int ahead) {
-    return c == '#' && ahead != '\\';
+    return c == '#' && ahead != '\\' && ahead != '(';
 }
 
 static object* parse_boolean(FILE *in) {
@@ -475,6 +476,53 @@ static object* parse_quote_form(FILE *in) {
     return obj;
 }
 
+int is_vector_start(int c, int ahead) {
+    return c == '#' && ahead == '(';
+}
+
+object* parse_vector(FILE *in) {
+    objstream *stream;
+    object *obj;
+    object **buf;
+    int ret;
+
+    stream = objstream_new(-1);
+    if (stream == NULL) {
+        fprintf(stdout, "null");
+        return NULL;
+    }
+
+    for(;;) {
+        skip_whitespace(in);
+        if (peek(in) == ')') {
+            getc(in);
+            break;
+        }
+        obj = sc_read(in);
+        if (obj == NULL) {
+            objstream_dispose(stream);
+            return NULL;
+        }
+        ret = objstream_append(stream, obj);
+        if (ret != 0) {
+            objstream_dispose(stream);
+            return NULL;
+        }
+    }
+
+    if (!is_delimiter(peek(in))) {
+        fprintf(stdout, "vector not followed by delimiter `%c\n", peek(in));
+        objstream_dispose(stream);
+        return NULL;
+    }
+
+    buf = objstream_trim(stream, &ret);
+    gc();
+    obj = make_vector(buf, ret);
+    objstream_dispose(stream);
+    return obj;
+}
+
 object* sc_read(FILE *in) {
     int c;
     object *obj;
@@ -501,6 +549,9 @@ object* sc_read(FILE *in) {
         obj = parse_string(in);
     } else if (is_list_start(c)) {
         obj = parse_list(in);
+    } else if (is_vector_start(c, peek(in))) {
+        getc(in);
+        obj = parse_vector(in);
     } else if (is_symbol_start(c, peek(in))) {
         ungetc(c, in);
         obj = parse_symbol(in);

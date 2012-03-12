@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cloc --exclude-dir=.git,sicp,test,doc --exclude-lang="make,Bourne Again Shell" .
+cloc --exclude-dir=.git,sicp,test,doc,periodic --exclude-lang="make,Bourne Again Shell" .

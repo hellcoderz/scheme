@@ -80,6 +80,10 @@ static void dump_object(object *obj) {
             fprintf(stderr, "output port@%p<file=%p>\n",
                     obj, obj_opv(obj));
             break;
+        case VECTOR:
+            fprintf(stderr, "vector@%p<buf=%p,size=%d>\n",
+                    obj, obj_vav(obj), obj_vsv(obj));
+            break;
         default:
             break;
     }
@@ -262,6 +266,9 @@ static void gc_free(object *obj) {
         case OUTPUT_PORT:
             port_free(obj);
             break;
+        case VECTOR:
+            vector_free(obj);
+            break;
         default:
             break;
     }
@@ -280,7 +287,7 @@ tailcall:
     }
 
     mark_active(obj);
-    /* pairs and compound procedures have nested objects */
+    /* pairs, vector and compound procedures have nested objects */
     if (is_pair(obj)) {
         object *car_obj, *cdr_obj;
         car_obj = car(obj);
@@ -297,6 +304,15 @@ tailcall:
         mark_object(body);
         obj = env;
         goto tailcall;
+    }
+    if (is_vector(obj)) {
+        int i, len;
+        object **array;
+        len = obj_vsv(obj);
+        array = obj_vav(obj);
+        for (i = 0; i < len; i++) {
+            mark_object(array[i]);
+        }
     }
 }
 

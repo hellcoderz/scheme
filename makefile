@@ -4,7 +4,8 @@ OBJS = eval.o  mem.o reader.o fixnum.o charcache.o \
 	list.o symbol.o hashtbl.o sform.o env.o \
 	primitive.o procdef.o compound.o eof.o \
 	port.o ioproc.o gc.o stack.o intcache.o \
-	mathproc.o strproc.o objstream.o vector.o
+	mathproc.o strproc.o objstream.o vector.o \
+	vecproc.o
 
 CFLAG = -Wall -c
 LFLAG = -lm -lrt

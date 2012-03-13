@@ -6,6 +6,7 @@
 #include "env.h"
 #include "procdef.h"
 #include "gc.h"
+#include "write.h"
 
 static int is_self_evaluate(object *exp) {
     return is_fixnum(exp) ||
@@ -782,7 +783,9 @@ tailcall:
             }
             err = fn(args, &ret);
             if (err != 0) {
-                fprintf(stderr, "%s\n", error_str(err));
+                fprintf(stderr, "%s `", error_str(err));
+                sc_write(stderr, exp);
+                fprintf(stderr, "\n");
                 gc_abandon();
                 gc_abandon();
                 gc_abandon();
@@ -796,7 +799,9 @@ tailcall:
             /* handle var-arg */
             args = normalize_lambda_args(obj_lvargc(op), obj_lvvar(op), args);
             if (args == NULL) {
-                fprintf(stderr, "wrong arity\n");
+                fprintf(stderr, "wrong arity `");
+                sc_write(stderr, exp);
+                fprintf(stderr, "\n");
                 gc_abandon();
                 gc_abandon();
                 gc_abandon();
@@ -811,7 +816,9 @@ tailcall:
             gc_abandon();
             goto tailcall;
         } else {
-            fprintf(stderr, "%s\n", "object not applicable");
+            fprintf(stderr, "%s `", "object not applicable");
+            sc_write(stderr, exp);
+            fprintf(stderr, "\n");
             gc_abandon();
             gc_abandon();
             gc_abandon();
@@ -821,7 +828,9 @@ tailcall:
     } else {
         val = NULL;
         fprintf(stderr,
-                "cannot evaluate expression\n");
+                "cannot evaluate expression `");
+        sc_write(stderr, exp);
+        fprintf(stderr, "\n");
     }
 
     gc_abandon();

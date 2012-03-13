@@ -517,7 +517,6 @@ object* parse_vector(FILE *in) {
     }
 
     buf = objstream_trim(stream, &ret);
-    gc();
     obj = make_vector(buf, ret);
     objstream_dispose(stream);
     return obj;

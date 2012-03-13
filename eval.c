@@ -319,8 +319,15 @@ static object* list_of_values(object *ops, object *env) {
         return get_empty_list();
     } else {
         car_obj = sc_eval(first_operand(ops), env);
+        if (car_obj == NULL) {
+            return NULL;
+        }
         gc_protect(car_obj);
         cdr_obj = list_of_values(rest_operands(ops), env);
+        if (cdr_obj == NULL) {
+            gc_abandon();
+            return NULL;
+        }
         gc_protect(cdr_obj);
         obj = cons(car_obj, cdr_obj);
         gc_abandon();
@@ -721,6 +728,12 @@ tailcall:
         op = sc_eval(operator(exp), env);
         gc_protect(op);
         args = list_of_values(operands(exp), env);
+        if (args == NULL) {
+            gc_abandon();
+            gc_abandon();
+            gc_abandon();
+            return NULL;
+        }
         gc_protect(args);
 
         /* handle apply specially for tailcall requirement */

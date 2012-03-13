@@ -10,6 +10,7 @@
 #include "repl.h"
 #include "ioproc.h"
 #include "strproc.h"
+#include "vecproc.h"
 #include "mathproc.h"
 #include "gc.h"
 
@@ -940,6 +941,26 @@ static int is_eqv(object *a, object *b) {
     return 0;
 }
 
+static int is_vector_equal(object *a, object *b) {
+    int lena, lenb, i;
+    object **bufa, **bufb;
+
+    lena = obj_vsv(a);
+    lenb = obj_vsv(b);
+    if (lena != lenb) {
+        return 0;
+    }
+
+    bufa = obj_vav(a);
+    bufb = obj_vav(b);
+    for (i = 0; i < lena; i++) {
+        if (!is_equal(bufa[i], bufb[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 static int is_equal(object *a, object *b) {
     if (type(a) != type(b)) {
         return 0;
@@ -948,6 +969,8 @@ static int is_equal(object *a, object *b) {
         return is_list_equal(a, b);
     } else if (is_string(a)) {
         return is_string_equal(a, b);
+    } else if (is_vector(a)) {
+        return is_vector_equal(a, b);
     }
 
     return is_eqv(a, b);
@@ -1338,6 +1361,10 @@ int init_primitive(object *env) {
         return ret;
     }
     ret = init_str_primitive(env);
+    if (ret != 0) {
+        return ret;
+    }
+    ret = init_vec_primitive(env);
     return ret;
 }
 

@@ -46,7 +46,7 @@ Todo list:
 + add string functions **[DONE]**
 + add (display) procedure **[DONE]**
 + improve io support **[DONE]**
-+ add vector support
++ add vector support **[DONE]**
 + rewrite environment using rbtree(variable lookup is too slow)
 + macro support
 + call/cc

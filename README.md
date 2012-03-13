@@ -16,10 +16,11 @@ Features currently included:
 -----------------
 + lambda, of course
 + integer(32 bit), floating-point numbers, string, symbol, boolean,
-character, pair
+character, pair, vector
 + basic number/mathematical functions
 + basic input/output support
 + basic string/character procedures
++ vector procedures in R5RS
 + most list procedures in MIT Scheme
 + cond, if, let, begin, and, or, define, set!, apply, eval...
 + var-arg

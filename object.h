@@ -25,6 +25,7 @@ typedef enum {
     OUTPUT_PORT,
     EOF_OBJECT,
     VECTOR,
+    ENV_FRAME,
 } object_type;
 
 struct object;
@@ -35,6 +36,10 @@ typedef struct gc_head {
     int mark;
     struct object *chain;
 } gc_head;
+
+struct rbnode;
+typedef struct rbnode *position;
+typedef struct rbnode *rbtree;
 
 typedef struct object {
     gc_head gc;
@@ -83,6 +88,9 @@ typedef struct object {
         struct {
             FILE *stream;
         } output_port;
+        struct {
+           rbtree tree;
+        } env_frame;
     } data;
 } object;
 
@@ -108,6 +116,7 @@ typedef struct object {
 #define obj_opv(p) (p->data.output_port.stream)
 #define gc_mark(p) ((p)->gc.mark)
 #define gc_chain(p) ((p)->gc.chain)
+#define obj_rbtv(p) (p->data.env_frame.tree)
 
 #define SIZEOF_OBJECT   sizeof(object)
 
@@ -203,6 +212,14 @@ int is_input_port(object *obj);
 object* make_output_port(FILE *stream);
 int is_output_port(object *obj);
 void port_free(object *obj);
+
+object* make_env_frame(void);
+int is_env_frame(object *obj);
+int env_frame_init(void);
+void env_frame_dispose(void);
+int env_frame_insert(object *frame, object *var, object *val, int modify);
+object* env_frame_find(object *frame, object *var);
+void env_frame_free(object *obj);
 
 #endif
 

@@ -19,6 +19,7 @@ int init_obj(void) {
     CALL_WITH_CHECK(empty_list_init);
     CALL_WITH_CHECK(symbol_init);
     CALL_WITH_CHECK(sform_init);
+    CALL_WITH_CHECK(env_frame_init);
     
     return 0;
 }
@@ -30,5 +31,6 @@ void dispose_obj(void) {
     eof_dispose();
     intcache_dispose();
     charcache_dispose();
+    env_frame_dispose();
 }
 

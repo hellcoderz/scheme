@@ -156,6 +156,8 @@ int sc_write(FILE *out, object *val) {
         fprintf(out, "#<input-port@%p>", val);
     } else if (is_output_port(val)) {
         fprintf(out, "#<output-port@%p>", val);
+    } else if (is_env_frame(val)) {
+        fprintf(out, "#<environment-frame@%p>", val);
     } else {
         fprintf(stderr,
                 "unknown type, cannot print\n");

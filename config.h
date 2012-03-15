@@ -34,7 +34,10 @@
 #define GC_THRESHOLD    1024 * 5 
 
 /* enable gc debugging info */
-#define GC_DEBUG_INFO
+/* #define GC_DEBUG_INFO */
+
+/* enable rb-tree verification after each insertion */
+/* #define VERIFY_RB_TREE */
 
 #endif
 

@@ -213,12 +213,16 @@ object* make_output_port(FILE *stream);
 int is_output_port(object *obj);
 void port_free(object *obj);
 
+
+typedef void (*env_frame_walk_fn)(object *var, object *val);
 object* make_env_frame(void);
 int is_env_frame(object *obj);
 int env_frame_init(void);
 void env_frame_dispose(void);
-int env_frame_insert(object *frame, object *var, object *val, int modify);
+int env_frame_insert(object *frame, object *var, object *val);
+int env_frame_change(object *frame, object *var, object *val);
 object* env_frame_find(object *frame, object *var);
+void env_frame_walk(object *frame, env_frame_walk_fn walker);
 void env_frame_free(object *obj);
 
 #endif

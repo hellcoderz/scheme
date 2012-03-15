@@ -1,5 +1,7 @@
+#include <stdlib.h>
 #include "object.h"
 #include "mem.h"
+#include "config.h"
 
 typedef enum color_type {
     RED,
@@ -8,7 +10,7 @@ typedef enum color_type {
 
 /**
  * var must be a symbol, a total order is maintained using
- * simple pointer comparison. Thus no hash need.
+ * simple pointer comparison. Thus no hash needed.
  */
 typedef struct rbnode {
     object *var;
@@ -150,7 +152,7 @@ static position rotate(position parent, object *var) {
     }
 }
 
-static void handle_reorient(object *var, rbtree *t, position *x,
+static void handle_reorient(object *var, rbtree t, position *x,
                             position *p, position *gp, position *ggp) {
     /* flip color */
     rbcolor(*x) = RED;
@@ -158,7 +160,7 @@ static void handle_reorient(object *var, rbtree *t, position *x,
     rbcolor(rbright(*x)) = BLACK;
 
     if (rbcolor(*p) == RED) {
-        /* need totate */
+        /* need rotate */
         rbcolor(*gp) = RED;
         if ((var < rbvar(*gp)) != (var < rbvar(*p))) {
             *p = rotate(*gp, var); /* start double rotate */
@@ -166,10 +168,33 @@ static void handle_reorient(object *var, rbtree *t, position *x,
         *x = rotate(*ggp, var);
         rbcolor(*x) = BLACK;
     }
-    rbcolor(rbright(*t)) = BLACK; /* make root black */
+    rbcolor(rbright(t)) = BLACK; /* make root black */
 }
 
-int env_frame_insert(object *frame, object *var, object *val, int modify) {
+static int rb_change(rbtree t, object *var, object *val) {
+    if (t == null_node) {
+        return -1;
+    }
+    if (var < rbvar(t)) {
+        return rb_change(rbleft(t), var, val);
+    } else if (var > rbvar(t)) {
+        return rb_change(rbright(t), var, val);
+    } else {
+        rbval(t) = val;
+        return 0;
+    }
+}
+
+int env_frame_change(object *frame, object *var, object *val) {
+    rbtree t = obj_rbtv(frame);
+    return rb_change(t, var, val);
+}
+
+#ifdef VERIFY_RB_TREE
+static void rb_verify(rbtree tree);
+#endif
+
+int env_frame_insert(object *frame, object *var, object *val) {
     position x, p, gp, ggp;
     rbtree t = obj_rbtv(frame);
 
@@ -186,11 +211,11 @@ int env_frame_insert(object *frame, object *var, object *val, int modify) {
         }
         if (rbcolor(rbleft(x)) == RED &&
             rbcolor(rbright(x)) == RED) {
-            handle_reorient(var, &t, &x, &p, &gp, &ggp);
+            handle_reorient(var, t, &x, &p, &gp, &ggp);
         }
     }
 
-    if (x != null_node && modify) {
+    if (x != null_node) {
         /* change existing node */
         rbval(x) = val;
     } else if (x == null_node) {
@@ -208,12 +233,86 @@ int env_frame_insert(object *frame, object *var, object *val, int modify) {
             rbright(p) = x;
         }
         /* color it red; maybe rotate */
-        handle_reorient(var, &t, &x, &p, &gp, &ggp);
-    } else {
-        return -1;
+        handle_reorient(var, t, &x, &p, &gp, &ggp);
     }
 
-    obj_rbtv(frame) = t;
+#ifdef VERIFY_RB_TREE
+    rb_verify(t);
+#endif
     return 0;
 }
+
+void rb_walk(rbtree t, env_frame_walk_fn walker) {
+    if (t == null_node) {
+        return;
+    }
+
+    walker(rbvar(t), rbval(t));
+    rb_walk(rbleft(t), walker);
+    rb_walk(rbright(t), walker);
+}
+
+void env_frame_walk(object *frame, env_frame_walk_fn walker) {
+    rbtree t = obj_rbtv(frame);
+    rb_walk(rbright(t), walker);
+}
+
+/* rbtree verification functions */
+#ifdef VERIFY_RB_TREE
+static int rb_verify_node(rbtree t) {
+    rbtree left, right;
+
+    if (t == null_node) {
+        return 1;
+    }
+    
+    left = rbleft(t);
+    right = rbright(t);
+    if (rbcolor(t) == RED &&
+        (rbcolor(left) != BLACK || rbcolor(right) != BLACK)) {
+        return 0;
+    }
+    return rb_verify_node(left) && rb_verify_node(right);
+}
+
+static void rb_verify_black_node(rbtree t, int cnt, int *n) {
+    if (t == null_node) {
+        if (*n == -1) {
+            *n = cnt;
+            return;
+        } else if (*n == cnt) {
+            return;
+        } else {
+            fprintf(stderr,
+                    "not every path from a node to a leaf \
+                    contains the same number of black nodes\n");
+            exit(-1);
+        }
+    }
+    if (rbcolor(t) == BLACK) {
+        cnt++;
+    }
+    rb_verify_black_node(rbleft(t), cnt, n);
+    rb_verify_black_node(rbright(t), cnt, n);
+}
+
+static void rb_verify(rbtree tree) {
+    rbtree t = rbright(tree);
+    int n = -1;
+
+    if (rbcolor(t) != BLACK) {
+        fprintf(stderr, "root must be black\n");
+        return;
+    }
+    if (rbcolor(null_node) != BLACK) {
+        fprintf(stderr, "leaves must be black\n");
+        return;
+    }
+    if (!rb_verify_node(t)) {
+        fprintf(stderr, "children of red node must be black\n");
+        return;
+    }
+    rb_verify_black_node(t, 0, &n);
+}
+#endif  /* VERIFY_RB_TREE */
 

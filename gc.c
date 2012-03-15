@@ -84,6 +84,10 @@ static void dump_object(object *obj) {
             fprintf(stderr, "vector@%p<buf=%p,size=%d>\n",
                     obj, obj_vav(obj), obj_vsv(obj));
             break;
+        case ENV_FRAME:
+            fprintf(stderr, "env_frame@%p<rbtree=%p>\n",
+                    obj, obj_rbtv(obj));
+            break;
         default:
             break;
     }
@@ -262,6 +266,9 @@ static void gc_free(object *obj) {
         case SYMBOL:
             symbol_free(obj);
             break;
+        case ENV_FRAME:
+            env_frame_free(obj);
+            break;
         case INPUT_PORT:
         case OUTPUT_PORT:
             port_free(obj);
@@ -275,6 +282,12 @@ static void gc_free(object *obj) {
 }
 
 /* garbage collection functions */
+static void mark_object(object *obj);
+static void frame_marker(object *var, object *val) {
+    mark_object(var);
+    mark_object(val);
+}
+
 static void mark_object(object *obj) {
 tailcall:
     if (obj == NULL) {
@@ -287,7 +300,7 @@ tailcall:
     }
 
     mark_active(obj);
-    /* pairs, vector and compound procedures have nested objects */
+    /* env_frame, pairs, vector and compound procedures have nested objects */
     if (is_pair(obj)) {
         object *car_obj, *cdr_obj;
         car_obj = car(obj);
@@ -304,6 +317,9 @@ tailcall:
         mark_object(body);
         obj = env;
         goto tailcall;
+    }
+    if (is_env_frame(obj)) {
+        env_frame_walk(obj, frame_marker);
     }
     if (is_vector(obj)) {
         int i, len;

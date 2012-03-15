@@ -14,6 +14,7 @@ static int is_self_evaluate(object *exp) {
            is_boolean(exp) ||
            is_character(exp) ||
            is_string(exp) ||
+           is_env_frame(exp) ||
            is_eof_object(exp);
 }
 

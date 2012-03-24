@@ -8,6 +8,7 @@
 #include "log.h"
 #include "mem.h"
 #include "sform.h"
+#include "cont.h"
 
 static gc_heap heap;
 static gc_list free_list, active_list;
@@ -276,6 +277,9 @@ static void gc_free(object *obj) {
         case VECTOR:
             vector_free(obj);
             break;
+        case CONT:
+            cont_free(obj);
+            break;
         default:
             break;
     }
@@ -300,7 +304,7 @@ tailcall:
     }
 
     mark_active(obj);
-    /* env_frame, pairs, vector and compound procedures have nested objects */
+
     if (is_pair(obj)) {
         object *car_obj, *cdr_obj;
         car_obj = car(obj);
@@ -330,6 +334,15 @@ tailcall:
             mark_object(array[i]);
         }
     }
+    if (is_cont(obj)) {
+       struct cont *c = obj_cont(obj);
+       object **objs = c->capture;
+       int n = c->gc_root_stack.size;
+       int i = 0;
+       for (; i < n; i++) {
+           mark_object(objs[i]);
+       }
+    }
 }
 
 static void mark_stack_root(stack_elem elem) {
@@ -349,6 +362,7 @@ static void mark_sform(void) {
     mark_active(get_let_symbol());
     mark_active(get_and_symbol());
     mark_active(get_or_symbol());
+    mark_active(get_callwcc_symbol());
 }
 
 static void mark(void) {
@@ -441,8 +455,20 @@ void gc_stack_root_push(object **obj) {
     stack_push(stack_root, elem);
 }
 
-void gc_stack_root_pop() {
+void gc_stack_root_pop(void) {
     stack_pop(stack_root);
+}
+
+object** gc_stack_root_deepcopy(void) {
+    return stack_deepcopy(stack_root);
+}
+
+int gc_stack_root_copy(stack *dst) {
+    return stack_copy(stack_root, dst);
+}
+
+int gc_stack_root_swap(stack *src) {
+    return stack_swap(stack_root, src);
 }
 
 

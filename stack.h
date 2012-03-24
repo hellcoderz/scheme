@@ -18,6 +18,9 @@ void stack_dispose(stack *s);
 void stack_push(stack *s, stack_elem obj);
 void stack_pop(stack *s);
 void stack_for_each(stack *s, visitor_fn fn);
+object **stack_deepcopy(stack *s);
+int stack_copy(stack *this, stack *dst);
+int stack_swap(stack *this, stack *src);
 
 #endif
 

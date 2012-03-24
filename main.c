@@ -6,6 +6,7 @@
 #include "gc.h"
 
 double startup_time;
+volatile long *g_stack_bottom;
 
 static void dispose(void) {
     dispose_obj();
@@ -57,7 +58,10 @@ static int init(void) {
 }
 
 int main(int argc, char **argv) {
+    volatile long stack_bottom;
     int ret;
+
+    g_stack_bottom = &stack_bottom;
 
     ret = init();
     if (ret != 0) {

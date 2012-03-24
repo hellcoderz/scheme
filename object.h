@@ -26,6 +26,7 @@ typedef enum {
     EOF_OBJECT,
     VECTOR,
     ENV_FRAME,
+    CONT,
 } object_type;
 
 struct object;
@@ -40,6 +41,8 @@ typedef struct gc_head {
 struct rbnode;
 typedef struct rbnode *position;
 typedef struct rbnode *rbtree;
+
+struct cont;
 
 typedef struct object {
     gc_head gc;
@@ -91,6 +94,9 @@ typedef struct object {
         struct {
            rbtree tree;
         } env_frame;
+        struct {
+            struct cont *c;
+        } continuation;
     } data;
 } object;
 
@@ -117,6 +123,7 @@ typedef struct object {
 #define gc_mark(p) ((p)->gc.mark)
 #define gc_chain(p) ((p)->gc.chain)
 #define obj_rbtv(p) (p->data.env_frame.tree)
+#define obj_cont(p) (p->data.continuation.c)
 
 #define SIZEOF_OBJECT   sizeof(object)
 
@@ -224,6 +231,13 @@ int env_frame_change(object *frame, object *var, object *val);
 object* env_frame_find(object *frame, object *var);
 void env_frame_walk(object *frame, env_frame_walk_fn walker);
 void env_frame_free(object *obj);
+
+int is_cont(object *obj);
+object *save_cont(void);
+void internal_restore_cont(struct cont *c, object *val, int once_more);
+void cont_free(object *obj);
+object* get_escape_val(void);
+#define restore_cont(c, v) internal_restore_cont(c, v, 1);
 
 #endif
 

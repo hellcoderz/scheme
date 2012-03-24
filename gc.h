@@ -2,6 +2,7 @@
 #define _GC_H_
 
 #include "object.h"
+#include "stack.h"
 
 typedef struct gc_heap {
     struct object *segments;
@@ -27,8 +28,12 @@ void gc(void);
 void gc_finalize(void);
 void dump_gc_summary(void);
 
+object** gc_stack_root_deepcopy(void);
+int gc_stack_root_copy(stack *dst);
+int gc_stack_root_swap(stack *src);
+int is_gc_stack_root(stack *s);
 void gc_stack_root_push(object **obj);
-void gc_stack_root_pop();
+void gc_stack_root_pop(void);
 #define gc_protect(obj) \
     gc_stack_root_push(&obj)
 #define gc_abandon() \

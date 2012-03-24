@@ -480,3 +480,5 @@
 
 (define sort merge-sort)
 
+(define call/cc call-with-current-continuation)
+

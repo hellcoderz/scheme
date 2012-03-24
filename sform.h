@@ -17,6 +17,7 @@ object* get_else_symbol(void);
 object* get_let_symbol(void);
 object* get_and_symbol(void);
 object* get_or_symbol(void);
+object* get_callwcc_symbol(void);
 
 #endif
 

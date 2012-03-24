@@ -14,6 +14,7 @@ static object *g_else_symbol;
 static object *g_let_symbol;
 static object *g_and_symbol;
 static object *g_or_symbol;
+static object *g_callwcc_symbol;
 
 #define DEFINE_SYMBOL(var, sym) \
 {                           \
@@ -38,6 +39,7 @@ int sform_init(void) {
     DEFINE_SYMBOL(g_let_symbol, "let");
     DEFINE_SYMBOL(g_and_symbol, "and");
     DEFINE_SYMBOL(g_or_symbol, "or");
+    DEFINE_SYMBOL(g_callwcc_symbol, "call-with-current-continuation");
 
     return 0;
 }
@@ -88,5 +90,9 @@ object* get_and_symbol(void) {
 
 object* get_or_symbol(void) {
     return g_or_symbol;
+}
+
+object* get_callwcc_symbol(void) {
+    return g_callwcc_symbol;
 }
 

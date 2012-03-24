@@ -15,6 +15,9 @@ static int is_self_evaluate(object *exp) {
            is_character(exp) ||
            is_string(exp) ||
            is_env_frame(exp) ||
+           is_cont(exp) ||
+           is_primitive_proc(exp) ||
+           is_compound_proc(exp) ||
            is_eof_object(exp);
 }
 
@@ -621,7 +624,7 @@ static object* eval_env(object *args) {
 
 
 object* sc_eval(object *exp, object *env) {
-    object *val;
+    object *val = NULL;
 
     gc_protect(exp);
     gc_protect(env);
@@ -785,6 +788,40 @@ tailcall:
             goto tailcall;
         }
 
+        if (is_callwcc(op)) {
+            object *c;
+            if (!is_empty_list(cdr(args))) {
+                fprintf(stderr, "wrong arity `");
+                sc_write(stderr, exp);
+                fprintf(stderr, "\n");
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                return NULL;
+            }
+            c = save_cont();
+            if (c != NULL) {
+                /* continuation saved */
+                gc_protect(c);
+                c = cons(c, get_empty_list());
+                c = cons(car(args), c);
+                exp = c;
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                goto tailcall;
+            } else {
+                /* continuation returns */
+                val = get_escape_val();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                return val;
+            }
+        }
+
         if (is_primitive_proc(op)) {
             fn = obj_fv(op);
             if (fn == NULL) {
@@ -829,6 +866,19 @@ tailcall:
             gc_abandon();
             gc_abandon();
             goto tailcall;
+        } else if (is_cont(op)) {
+            if (!is_empty_list(cdr(args))) {
+                fprintf(stderr, "wrong arity `");
+                sc_write(stderr, exp);
+                fprintf(stderr, "\n");
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                return NULL;
+            }
+            /* never return, stack root is automatically abandoned*/
+            restore_cont(obj_cont(op), car(args));
         } else {
             fprintf(stderr, "%s `", "object not applicable");
             sc_write(stderr, exp);

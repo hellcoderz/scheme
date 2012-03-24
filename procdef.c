@@ -1253,6 +1253,20 @@ static int random_proc(object *params, object **result) {
     return 0;
 }
 
+static int callwcc_proc(object *params, object **result) {
+    /* handled specially in sc_eval.
+     *
+     * this function exists so that apply can be treated
+     * as normal function in Scheme code.
+     */
+    return SC_E_INV_STAT;
+}
+
+int is_callwcc(object *exp) {
+    return is_primitive_proc(exp) &&
+           obj_fv(exp) == callwcc_proc;
+}
+
 #define DEFINE_LIST_PROC(name) \
     define_proc(#name, name ## _proc)
 
@@ -1345,6 +1359,7 @@ int init_primitive(object *env) {
 
     define_proc("eval", eval_proc);
     define_proc("apply", apply_proc);
+    define_proc("call-with-current-continuation", callwcc_proc);
 
     define_proc("gc", gc_proc);
     define_proc("gc-summary", gc_summary_proc);

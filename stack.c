@@ -98,3 +98,59 @@ void stack_for_each(stack *s, visitor_fn fn) {
     }
 }
 
+object** stack_deepcopy(stack *s) {
+    stack_elem *p = s->elems;
+    stack_elem *q = p + s->size;
+    object **buf, **base;
+
+    if (s == NULL) {
+        return NULL;
+    }
+
+    buf = sc_malloc(sizeof(object*) * s->size);
+    if (buf == NULL) {
+        return NULL;
+    }
+    base = buf;
+    for (; p != q; p++, buf++) {
+        *buf = **p;
+    }
+    return base;
+}
+
+int stack_swap(stack *this, stack *src) {
+    stack_elem *buf;
+
+    if (this == NULL || src == NULL) {
+        return -1;
+    }
+
+    buf = sc_malloc(src->capacity * sizeof(stack_elem));
+    if (buf == NULL) {
+        return -1;
+    }
+    memcpy(buf, src->elems, sizeof(stack_elem) * src->size);
+    sc_free(this->elems);
+    this->elems = buf;
+    this->capacity = src->capacity;
+    this->size = src->size;
+    return 0;
+}
+
+int stack_copy(stack *this, stack *dst) {
+    stack_elem *buf;
+
+    if (this == NULL || dst == NULL) {
+        return -1;
+    }
+
+    buf = sc_malloc(this->size * sizeof(stack_elem));
+    if (buf == NULL) {
+        return -1;
+    }
+    memcpy(buf, this->elems, this->size * sizeof(stack_elem));
+    dst->elems = buf;
+    dst->capacity = dst->size = this->size;
+    return 0;
+}
+

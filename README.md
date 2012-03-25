@@ -11,7 +11,6 @@ expressive programming language." -- Sussman and Steele*
 Writing a Scheme interpreter is easy, and more importantly,
 it is fun.
 
-
 Features currently included:
 -----------------
 + lambda, of course
@@ -28,7 +27,15 @@ character, pair, vector
 + continuation
 + You should be able to use this Scheme interpreter to run all
 codes in *The Little Schemer*.
-+ **the only missing feature is macro**
+
+**The only missing feature is macro**
+
+Documentation:
+--------------
+Implementation goal is R5RS compatible. If you already know Scheme, just start
+typing code in the REPL. 
+Or you can read the R5RS 
+[here](http://www.schemers.org/Documents/Standards/R5RS/HTML)
 
 Todo list:
 ---------------

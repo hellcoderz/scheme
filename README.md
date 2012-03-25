@@ -25,8 +25,10 @@ character, pair, vector
 + cond, if, let, begin, and, or, define, set!, apply, eval...
 + var-arg
 + mark-sweep garbage collector
++ continuation
 + You should be able to use this Scheme interpreter to run all
 codes in *The Little Schemer*.
++ **the only missing feature is macro**
 
 Todo list:
 ---------------
@@ -49,8 +51,8 @@ Todo list:
 + improve io support **[DONE]**
 + add vector support **[DONE]**
 + rewrite environment using rbtree(variable lookup is too slow) **[DONE] ~2x speedup**
++ call/cc **[DONE]**
 + macro support
-+ call/cc
 
 Thanks for *Peter Michaux's* excellent 
 [introduction series.](http://peter.michaux.ca/articles/scheme-from-scratch-introduction)

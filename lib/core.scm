@@ -482,3 +482,9 @@
 
 (define call/cc call-with-current-continuation)
 
+(define (values . vals)
+  (call/cc
+    (lambda (cont) (cont vals))))
+
+(define (current-continuation)
+  (call/cc (lambda (cc) (cc cc))))

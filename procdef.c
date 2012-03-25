@@ -202,6 +202,19 @@ static int is_procedure_proc(object *params, object **result) {
     return 0;
 }
 
+static int is_continuation_proc(object *params, object **result) {
+    int ret;
+    object *obj;
+
+    check_null(result);
+    check_arg1(params);
+
+    obj = car(params);
+    ret = is_cont(obj);
+    *result = ret ? get_true_obj() : get_false_obj();
+    return 0;
+}
+
 static int char_to_integer_proc(object *params, object **result) {
     if (result == NULL) {
         return SC_E_NULL;
@@ -1282,6 +1295,7 @@ int init_primitive(object *env) {
     define_proc("string?", is_string_proc);
     define_proc("pair?", is_pair_proc);
     define_proc("procedure?", is_procedure_proc);
+    define_proc("continuation?", is_continuation_proc);
 
     define_proc("char->integer", char_to_integer_proc);
     define_proc("integer->char", integer_to_char_proc);

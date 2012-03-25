@@ -8,13 +8,13 @@
 #include "eval.h"
 #include "repl.h"
 #include "sform.h"
-
+#include "gc.h"
 
 static int load_proc(object *params, object **result) {
     char *filename;
     FILE *in;
     object *exp, *val;
-    object *env;
+    object *env, *port;
 
     if (result == NULL) {
         return SC_E_NULL;
@@ -32,8 +32,10 @@ static int load_proc(object *params, object **result) {
     if (in == NULL) {
         return SC_E_IO_OPEN;
     }
+    port = make_input_port(in); /* delay fclose to gc */
     env = get_repl_env();
     val = get_nrv_symbol();
+    gc_protect(port);
     while (!is_eof_object((exp = sc_read(in)))) {
         if (exp == NULL) {
             return SC_E_LOAD;
@@ -43,7 +45,7 @@ static int load_proc(object *params, object **result) {
             return SC_E_LOAD;
         }
     }
-    fclose(in);
+    gc_abandon();
     *result = val;
     return 0;
 }

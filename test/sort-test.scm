@@ -8,7 +8,8 @@
 
 (define (timeit)
   (let ((start (runtime)))
-    (quick-sort seq <)
+    (display (apply <= (quick-sort seq <)))
+    (newline)
     (display (- (runtime) start))
     (newline)))
 

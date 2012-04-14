@@ -153,9 +153,12 @@
           a b rest)))
 
 ; io functions
-(define (newline . args)
-  (apply display
-         #\newline args))
+(define (newline)
+  (display #\newline))
+
+(define (display-line . args)
+  (for-each display args)
+  (newline))
 
 (define (open-input-file . args)
   (apply open-input-port args))
@@ -329,9 +332,19 @@
                 (remove pred (cdr seq))))))
 
 (define (partition pred seq)
-  (list
-    (filter pred seq)
-    (remove pred seq)))
+  (define (iter lat col)
+    (cond
+      ((null? lat) (col '() '()))
+      ((pred (car lat)) (iter (cdr lat)
+                              (lambda (mem other)
+                                (col (cons (car lat) mem)
+                                     other))))
+      (else (iter (cdr lat)
+                  (lambda (mem other)
+                    (col mem (cons (car lat) other)))))))
+  (iter seq
+        (lambda (mem other)
+          (list mem other))))
 
 (define (delq elem seq)
   (remove (lambda (obj) (eq? obj elem)) seq))
@@ -448,16 +461,33 @@
         pair))))
 
 (define (quick-sort seq proc)
+  (define (partition less val seq)
+    (define (iter seq col)
+      (cond
+        ((null? seq) (col '() '() '()))
+        ((less (car seq) val)
+         (iter (cdr seq)
+               (lambda (l e g)
+                 (col (cons (car seq) l) e g))))
+        ((less val (car seq))
+         (iter (cdr seq)
+               (lambda (l e g)
+                 (col l e (cons (car seq) g)))))
+        (else (iter (cdr seq)
+                    (lambda (l e g)
+                      (col l (cons (car seq) e) g))))))
+    (iter seq (lambda (l e g) (list l e g))))
   (cond
     ((null? seq) '())
     ((null? (cdr seq)) seq)
     (else
       (let ((rnd (list-ref seq
                    (random-in-range 0 (length seq)))))
-        (append
-          (quick-sort (filter (lambda (e) (proc e rnd)) seq) proc)
-          (filter (lambda (e) (not (or (proc e rnd) (proc rnd e)))) seq)
-          (quick-sort (filter (lambda (e) (proc rnd e)) seq) proc))))))
+        (let ((parts (partition proc rnd seq)))
+            (append
+              (quick-sort (car parts) proc)
+              (cadr parts)
+              (quick-sort (caddr parts) proc)))))))
 
 (define (merge-sort seq proc)
   (define (merge x y)

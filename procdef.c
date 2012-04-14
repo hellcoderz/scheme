@@ -13,6 +13,7 @@
 #include "vecproc.h"
 #include "mathproc.h"
 #include "gc.h"
+#include "mem.h"
 
 extern double startup_time;
 
@@ -1280,6 +1281,40 @@ int is_callwcc(object *exp) {
            obj_fv(exp) == callwcc_proc;
 }
 
+#define DEFAULT_PREFIX "GEN"
+static int gensym_proc(object *params, object **result) {
+    char *prefix, *sym;
+    int len;
+    static int next_id = 42;
+
+    check_null(result);
+    if (is_empty_list(params)) {
+        prefix = DEFAULT_PREFIX;
+        len = sizeof(DEFAULT_PREFIX) + 32;
+    } else if (is_empty_list(cdr(params))) {
+        object *prefix_obj = car(params);
+        if (!is_string(prefix_obj)) {
+            return SC_E_ARG_TYPE;
+        }
+        prefix = obj_sv(prefix_obj);
+        len = obj_slenv(prefix_obj) + 32;
+    } else {
+        return SC_E_ARITY;
+    }
+
+    sym = sc_malloc(len);
+    if (sym == NULL) {
+        return SC_E_NO_MEM;
+    }
+    sprintf(sym, "%s__$$%d$$", prefix, next_id++);
+    *result = make_symbol(sym);
+    sc_free(sym);
+    if (*result == NULL) {
+        return SC_E_NO_MEM;
+    }
+    return 0;
+}
+
 #define DEFINE_LIST_PROC(name) \
     define_proc(#name, name ## _proc)
 
@@ -1380,6 +1415,8 @@ int init_primitive(object *env) {
 
     define_proc("runtime", runtime_proc);
     define_proc("random", random_proc);
+
+    define_proc("gensym", gensym_proc);
 
     ret = init_io_primitive(env);
     if (ret != 0) {

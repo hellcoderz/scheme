@@ -92,7 +92,8 @@ void internal_restore_cont(cont *c, object *val, int once_more) {
     long tos;
     int i, n;
     long *stk;
-
+    
+    /* suppress unused warning */
     padding[0] = 12;
     padding[2] = padding[0] + 2;
 

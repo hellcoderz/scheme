@@ -367,6 +367,7 @@ static void mark_sform(void) {
     mark_active(get_and_symbol());
     mark_active(get_or_symbol());
     mark_active(get_callwcc_symbol());
+    mark_active(get_definemacro_symbol());
 }
 
 static void mark(void) {

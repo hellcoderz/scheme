@@ -510,6 +510,7 @@
 
 (define sort merge-sort)
 
+; continuation
 (define call/cc call-with-current-continuation)
 
 (define (values . vals)
@@ -518,3 +519,25 @@
 
 (define (current-continuation)
   (call/cc (lambda (cc) (cc cc))))
+
+; delay evaluation
+(define (make-promise proc)
+  (let ((result-ready? #f)
+        (result #f))
+    (lambda ()
+      (if result-ready?
+        result
+        (let ((x (proc)))
+          (if result-ready?
+            result
+            (begin (set! result-ready? #t)
+                   (set! result x)
+                   result)))))))
+
+(define-macro delay
+   (lambda (exp)
+     `(make-promise (lambda () ,exp))))
+
+(define (force promise)
+  (promise))
+

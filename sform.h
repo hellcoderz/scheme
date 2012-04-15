@@ -18,6 +18,7 @@ object* get_let_symbol(void);
 object* get_and_symbol(void);
 object* get_or_symbol(void);
 object* get_callwcc_symbol(void);
+object* get_definemacro_symbol(void);
 
 #endif
 

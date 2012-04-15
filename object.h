@@ -27,6 +27,7 @@ typedef enum {
     VECTOR,
     ENV_FRAME,
     CONT,
+    MACRO,
 } object_type;
 
 struct object;
@@ -86,6 +87,9 @@ typedef struct object {
             unsigned char argc; /* (x y . z) is 2 */
         } compound_proc;
         struct {
+            struct object *transformer;
+        } macro;
+        struct {
             FILE *stream;
         } input_port;
         struct {
@@ -124,6 +128,7 @@ typedef struct object {
 #define gc_chain(p) ((p)->gc.chain)
 #define obj_rbtv(p) (p->data.env_frame.tree)
 #define obj_cont(p) (p->data.continuation.c)
+#define obj_mv(p) (p->data.macro.transformer)
 
 #define SIZEOF_OBJECT   sizeof(object)
 
@@ -238,6 +243,9 @@ void internal_restore_cont(struct cont *c, object *val, int once_more);
 void cont_free(object *obj);
 object* get_escape_val(void);
 #define restore_cont(c, v) internal_restore_cont(c, v, 1);
+
+int is_macro(object *obj);
+object *make_macro(object *t);
 
 #endif
 

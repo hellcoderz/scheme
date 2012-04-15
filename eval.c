@@ -605,6 +605,44 @@ static object* eval_exps(object *args) {
     return car(args);
 }
 
+/* macro functions */
+static int is_macro_definition(object *exp) {
+    return is_tagged_list(exp, get_definemacro_symbol());
+}
+
+static object *eval_macro_definition(object *exp, object *env) {
+    object *var, *val;
+    char msg[] = "wrong arity in `define-macro form\n";
+    int ret;
+
+    var = definition_variable(exp);
+    val = definition_value(exp);
+    if (val == NULL || var == NULL || 
+        (is_symbol(cadr(exp)) && !is_empty_list(cdddr(exp)))) {
+        fprintf(stderr, "%s", msg);
+        return NULL;
+    }
+    if (!is_variable(var)) {
+        fprintf(stderr, "%s\n", "variable must be symbol");
+        return NULL;
+    }
+
+    gc_protect(val); /* protect lambda form */
+    val = sc_eval(val, env);
+    if (val == NULL) {
+        return NULL;
+    }
+    val = make_macro(val);
+    ret = define_variable(var, val, env);
+    gc_abandon();
+    if (ret != 0) {
+        fprintf(stderr, "%s\n",
+                "unexpected error in define-macro");
+        return NULL;
+    }
+    return get_nrv_symbol();
+}
+
 static object* eval_env(object *args) {
     object *env;
 
@@ -644,6 +682,8 @@ tailcall:
         val = eval_assignment(exp, env);
     } else if (is_definition(exp)) {
         val = eval_definition(exp, env);
+    } else if (is_macro_definition(exp)) {
+        val = eval_macro_definition(exp, env);
     } else if (is_if(exp)) {
         object *pred;
         if (!check_if_arity(exp)) {
@@ -730,6 +770,42 @@ tailcall:
         int err;
 
         op = sc_eval(operator(exp), env);
+        if (is_macro(op)) {
+            object *texp, *tenv;
+            /* handle var-arg */
+            op = obj_mv(op);
+            args = cdr(exp);
+            gc_protect(op);
+            gc_protect(args);
+            args = normalize_lambda_args(obj_lvargc(op), obj_lvvar(op), args);
+            if (args == NULL) {
+                fprintf(stderr, "wrong arity `");
+                sc_write(stderr, exp);
+                fprintf(stderr, "\n");
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                return NULL;
+            }
+
+            /* do macro transform */
+            tenv = extend_env(obj_lvp(op),
+                             args,
+                             obj_lve(op));
+            texp = make_begin(obj_lvb(op));
+            gc_protect(tenv);
+            gc_protect(texp);
+            exp = sc_eval(texp, tenv); 
+            gc_abandon();
+            gc_abandon();
+
+            gc_abandon(); /* args */
+            gc_abandon(); /* op */
+            goto tailcall;
+        }
+
+        /* normal application */
         gc_protect(op);
         args = list_of_values(operands(exp), env);
         if (args == NULL) {

@@ -343,6 +343,10 @@ tailcall:
            mark_object(objs[i]);
        }
     }
+    if (is_macro(obj)) {
+        obj = obj_mv(obj);
+        goto tailcall;
+    }
 }
 
 static void mark_stack_root(stack_elem elem) {

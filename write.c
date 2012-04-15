@@ -160,6 +160,8 @@ int sc_write(FILE *out, object *val) {
         fprintf(out, "#<environment-frame@%p>", val);
     } else if (is_cont(val)) {
         fprintf(out, "#<continuation@%p>", val);
+    } else if (is_macro(val)) {
+        fprintf(out, "#<macro@%p>", val);
     } else {
         fprintf(stderr,
                 "unknown type, cannot print\n");

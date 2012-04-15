@@ -6,6 +6,9 @@
 int sform_init(void);
 
 object* get_quote_symbol(void);
+object* get_quasiquote_symbol(void);
+object* get_unquote_symbol(void);
+object* get_unquotesplicing_symbol(void);
 object* get_set_symbol(void);
 object* get_define_symbol(void);
 object* get_if_symbol(void);

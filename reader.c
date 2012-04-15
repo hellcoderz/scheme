@@ -476,6 +476,50 @@ static object* parse_quote_form(FILE *in) {
     return obj;
 }
 
+static int is_quasiquote_start(int c) {
+    return c == '`';
+}
+
+static object* parse_quasiquote_form(FILE *in) {
+    object *quasiquote, *obj, *cdr_obj;
+
+    cdr_obj = sc_read(in);
+    if (cdr_obj == NULL) {
+        obj = NULL;
+    } else {
+        quasiquote = get_quasiquote_symbol();
+        gc_protect(cdr_obj);
+        obj = cons(quasiquote, cons(cdr_obj, get_empty_list()));
+        gc_abandon();
+    }
+    return obj;
+}
+
+static int is_unquote_start(int c) {
+    return c == ',';
+}
+
+static object* parse_unquote_form(FILE *in) {
+    int c = peek(in);
+    object *unquote, *obj, *cdr_obj;
+    
+    if (c == '@') {
+        unquote = get_unquotesplicing_symbol();
+        getc(in);
+    } else {
+        unquote = get_unquote_symbol();
+    }
+    cdr_obj = sc_read(in);
+    if (cdr_obj == NULL) {
+        obj = NULL;
+    } else {
+        gc_protect(cdr_obj);
+        obj = cons(unquote, cons(cdr_obj, get_empty_list()));
+        gc_abandon();
+    }
+    return obj;
+}
+
 int is_vector_start(int c, int ahead) {
     return c == '#' && ahead == '(';
 }
@@ -556,6 +600,10 @@ object* sc_read(FILE *in) {
         obj = parse_symbol(in);
     } else if (is_quote_start(c)) {
         obj = parse_quote_form(in);
+    } else if (is_quasiquote_start(c)) {
+        obj = parse_quasiquote_form(in);
+    } else if (is_unquote_start(c)) {
+        obj = parse_unquote_form(in);
     } else if (c == EOF) {
         obj = get_eof_object();
     } else {

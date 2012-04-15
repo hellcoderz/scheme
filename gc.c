@@ -355,6 +355,9 @@ static void mark_stack_root(stack_elem elem) {
 
 static void mark_sform(void) {
     mark_active(get_quote_symbol());
+    mark_active(get_quasiquote_symbol());
+    mark_active(get_unquote_symbol());
+    mark_active(get_unquotesplicing_symbol());
     mark_active(get_set_symbol());
     mark_active(get_define_symbol());
     mark_active(get_nrv_symbol());

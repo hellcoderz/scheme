@@ -3,6 +3,9 @@
 #include "sform.h"
 
 static object *g_quote_symbol;
+static object *g_quasiquote_symbol;
+static object *g_unquote_symbol;
+static object *g_unquotesplicing_symbol;
 static object *g_set_symbol;
 static object *g_define_symbol;
 static object *g_nrv_symbol; /* No Return Value symbol */
@@ -42,6 +45,9 @@ int sform_init(void) {
     DEFINE_SYMBOL(g_or_symbol, "or");
     DEFINE_SYMBOL(g_callwcc_symbol, "call-with-current-continuation");
     DEFINE_SYMBOL(g_definemacro_symbol, "define-macro");
+    DEFINE_SYMBOL(g_quasiquote_symbol, "quasiquote");
+    DEFINE_SYMBOL(g_unquote_symbol, "unquote");
+    DEFINE_SYMBOL(g_unquotesplicing_symbol, "unquote-splicing");
 
     return 0;
 }
@@ -100,5 +106,17 @@ object* get_callwcc_symbol(void) {
 
 object* get_definemacro_symbol(void) {
     return g_definemacro_symbol;
+}
+
+object* get_quasiquote_symbol(void) {
+    return g_quasiquote_symbol;
+}
+
+object* get_unquote_symbol(void) {
+    return g_unquote_symbol;
+}
+
+object* get_unquotesplicing_symbol(void) {
+    return g_unquotesplicing_symbol;
 }
 

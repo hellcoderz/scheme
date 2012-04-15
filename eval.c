@@ -35,13 +35,115 @@ static int is_tagged_list(object *exp, object *tag) {
     return 0;
 }
 
-/* eval quote */
+/* quote functions */
 static int is_quoted(object *exp) {
     return is_tagged_list(exp, get_quote_symbol());
 }
 
 static object* eval_quote(object *exp) {
     return cadr(exp);
+}
+
+static int is_quasiquote(object *exp) {
+    return is_tagged_list(exp, get_quasiquote_symbol());
+}
+
+static int is_unquote(object *exp) {
+    return is_tagged_list(exp, get_unquote_symbol());
+}
+
+static int is_unquotesplicing(object *exp) {
+    return is_tagged_list(exp, get_unquotesplicing_symbol());
+}
+
+static object* get_last_pair(object *list) {
+    object *rest = list;
+    while (!is_empty_list(cdr(rest))) {
+        rest = cdr(rest);
+    }
+    return rest;
+}
+
+static object* eval_quasiquote_rec(object *exp, object *env, int level, int outmost) {
+    object *obj, *cdr_obj, *car_obj;
+    int unquote_level;
+
+    if (is_pair(exp)) {
+        obj = car(exp);
+        if (is_unquote(obj)) {
+            unquote_level = level - 1;
+            /* unquote only at the same nesting level as the outermost backquote */
+            if (unquote_level == 0) {
+                car_obj = sc_eval(cadr(obj), env);
+            } else {
+                car_obj = eval_quasiquote_rec(obj, env, unquote_level, 0);
+            }
+            gc_protect(car_obj);
+            cdr_obj = eval_quasiquote_rec(cdr(exp), env, level, outmost);
+            gc_protect(cdr_obj);
+            obj = cons(car_obj, cdr_obj);
+            gc_abandon();
+            gc_abandon();
+            return obj;
+        } else if (is_unquotesplicing(obj)) {
+            unquote_level = level - 1;
+            /* unquote only at the same nesting level as the outermost backquote */
+            if (unquote_level == 0) {
+                car_obj = sc_eval(cadr(obj), env);
+            } else {
+                car_obj = eval_quasiquote_rec(obj, env, unquote_level, 0);
+            }
+            gc_protect(car_obj);
+            cdr_obj = eval_quasiquote_rec(cdr(exp), env, level, outmost);
+            gc_abandon();
+            if (is_empty_list(car_obj)) {
+                return cdr_obj;
+            } else {
+                object *last = get_last_pair(car_obj);
+                set_cdr(last, cdr_obj);
+                return car_obj;
+            }
+        } else if (is_quasiquote(obj)) {
+            car_obj = eval_quasiquote_rec(obj, env, level+1, 0);
+            gc_protect(car_obj);
+            cdr_obj = eval_quasiquote_rec(cdr(exp), env, level, outmost);
+            gc_protect(cdr_obj);
+            obj = cons(car_obj, cdr_obj);
+            gc_abandon();
+            gc_abandon();
+            return obj;
+        } else {
+            /* handle improper list special case */
+            /* e.g `(1 . ,(+ 1 2)) */
+            if (obj == get_unquote_symbol() && level == 1 && outmost) {
+                obj = cadr(exp);
+                if (obj == NULL) {
+                    return exp;
+                }
+                return sc_eval(obj, env);
+            } else if (obj == get_unquotesplicing_symbol() && level == 1 && outmost) {
+                obj = cadr(exp);
+                if (obj == NULL) {
+                    return exp;
+                }
+                return sc_eval(obj, env);
+            } else {
+                car_obj = eval_quasiquote_rec(obj, env, level, 0);
+                gc_protect(car_obj);
+                cdr_obj = eval_quasiquote_rec(cdr(exp), env, level, outmost);
+                gc_protect(cdr_obj);
+                obj = cons(car_obj, cdr_obj);
+                gc_abandon();
+                gc_abandon();
+                return obj;
+            }
+        }
+    }
+    return exp;
+}
+
+static object* eval_quasiquote(object *exp, object *env) {
+    return eval_quasiquote_rec(cadr(exp), env, 1, 1);
 }
 
 /* assignment functions */
@@ -678,6 +780,8 @@ tailcall:
         val = eval_variable(exp, env);
     } else if (is_quoted(exp)) {
         val = eval_quote(exp);
+    } else if (is_quasiquote(exp)) {
+        val = eval_quasiquote(exp, env);
     } else if (is_assignment(exp)) {
         val = eval_assignment(exp, env);
     } else if (is_definition(exp)) {

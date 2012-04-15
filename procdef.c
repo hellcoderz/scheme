@@ -1270,7 +1270,7 @@ static int random_proc(object *params, object **result) {
 static int callwcc_proc(object *params, object **result) {
     /* handled specially in sc_eval.
      *
-     * this function exists so that apply can be treated
+     * this function exists so that call/cc can be treated
      * as normal function in Scheme code.
      */
     return SC_E_INV_STAT;
@@ -1279,6 +1279,20 @@ static int callwcc_proc(object *params, object **result) {
 int is_callwcc(object *exp) {
     return is_primitive_proc(exp) &&
            obj_fv(exp) == callwcc_proc;
+}
+
+static int macroexpand_proc(object *params, object **result) {
+    /* handled specially in sc_eval.
+     *
+     * this function exists so that macroexpand can be treated
+     * as normal function in Scheme code.
+     */
+    return SC_E_INV_STAT;
+}
+
+int is_macroexpand(object *exp) {
+    return is_primitive_proc(exp) &&
+           obj_fv(exp) == macroexpand_proc;
 }
 
 #define DEFAULT_PREFIX "GEN"
@@ -1312,6 +1326,15 @@ static int gensym_proc(object *params, object **result) {
     if (*result == NULL) {
         return SC_E_NO_MEM;
     }
+    return 0;
+}
+
+static int is_macro_proc(object *params, object **result) {
+    object *obj;
+    check_null(result);
+    check_arg1(params);
+    obj = car(params);
+    *result = is_macro(obj) ? get_true_obj() : get_false_obj();
     return 0;
 }
 
@@ -1417,6 +1440,8 @@ int init_primitive(object *env) {
     define_proc("random", random_proc);
 
     define_proc("gensym", gensym_proc);
+    define_proc("macro?", is_macro_proc);
+    define_proc("macroexpand-1", macroexpand_proc);
 
     ret = init_io_primitive(env);
     if (ret != 0) {

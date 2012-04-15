@@ -46,6 +46,7 @@ char* error_str(int err);
 int is_apply(object *obj);
 int is_eval(object *obj);
 int is_callwcc(object *exp);
+int is_macroexpand(object *exp);
 int env_define_proc(char *sym, prim_proc fn, object *env);
 
 double number_to_double(object *obj);

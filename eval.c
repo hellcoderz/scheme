@@ -762,6 +762,34 @@ static object* eval_env(object *args) {
     return env;
 }
 
+static object* expand_macro(object *raw_exp, object *macro, object *args) {
+    object *texp, *tenv, *op, *exp, *params;
+
+    /* handle var-arg */
+    op = obj_mv(macro);
+    params = normalize_lambda_args(obj_lvargc(op), obj_lvvar(op), args);
+    if (params == NULL) {
+        fprintf(stderr, "wrong arity `");
+        sc_write(stderr, raw_exp);
+        fprintf(stderr, "\n");
+        return NULL;
+    }
+
+    /* do macro transform */
+    gc_protect(params);
+    tenv = extend_env(obj_lvp(op),
+                     params,
+                     obj_lve(op));
+    texp = make_begin(obj_lvb(op));
+    gc_protect(tenv);
+    gc_protect(texp);
+    exp = sc_eval(texp, tenv); 
+    gc_abandon();
+    gc_abandon();
+    gc_abandon();
+    return exp;
+}
+
 
 object* sc_eval(object *exp, object *env) {
     object *val = NULL;
@@ -875,37 +903,17 @@ tailcall:
 
         op = sc_eval(operator(exp), env);
         if (is_macro(op)) {
-            object *texp, *tenv;
-            /* handle var-arg */
-            op = obj_mv(op);
             args = cdr(exp);
             gc_protect(op);
             gc_protect(args);
-            args = normalize_lambda_args(obj_lvargc(op), obj_lvvar(op), args);
-            if (args == NULL) {
-                fprintf(stderr, "wrong arity `");
-                sc_write(stderr, exp);
-                fprintf(stderr, "\n");
-                gc_abandon();
-                gc_abandon();
+            exp = expand_macro(exp, op, args);
+            gc_abandon(); /* args */
+            gc_abandon(); /* op */
+            if (exp == NULL) {
                 gc_abandon();
                 gc_abandon();
                 return NULL;
             }
-
-            /* do macro transform */
-            tenv = extend_env(obj_lvp(op),
-                             args,
-                             obj_lve(op));
-            texp = make_begin(obj_lvb(op));
-            gc_protect(tenv);
-            gc_protect(texp);
-            exp = sc_eval(texp, tenv); 
-            gc_abandon();
-            gc_abandon();
-
-            gc_abandon(); /* args */
-            gc_abandon(); /* op */
             goto tailcall;
         }
 
@@ -966,6 +974,38 @@ tailcall:
             gc_abandon();
             gc_abandon();
             goto tailcall;
+        }
+
+        /* handle macroexpand specially for args */
+        if (is_macroexpand(op)) {
+            if (!is_empty_list(cdr(args))) {
+                fprintf(stderr, "%s\n", "wrong arity in macroexpand");
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                return NULL;
+            } else {
+                object *mexp = car(args);
+                object *macro = sc_eval(car(mexp), env);
+                if (!is_macro(macro)) {
+                    sc_write(stderr, car(mexp));
+                    fprintf(stderr, "%s\n", " not a macro");
+                    gc_abandon();
+                    gc_abandon();
+                    gc_abandon();
+                    gc_abandon();
+                    return NULL;
+                }
+                gc_protect(macro);
+                val = expand_macro(mexp, macro, cdr(mexp));
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                gc_abandon();
+                return val;
+            }
         }
 
         if (is_callwcc(op)) {

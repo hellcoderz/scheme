@@ -25,16 +25,13 @@ character, pair, vector
 + var-arg
 + mark-sweep garbage collector
 + continuation
-+ You should be able to use this Scheme interpreter to run all
-codes in *The Little Schemer*.
-
-**The only missing feature is macro**
++ macro(define-macro)
++ promise(delay, force)
 
 Documentation:
 --------------
-Implementation goal is R5RS compatible. If you already know Scheme, just start
-typing code in the REPL. 
-Or you can read the R5RS 
+If you already know Scheme, just start typing code in the REPL. 
+Or you can read the R5RS.
 [here](http://www.schemers.org/Documents/Standards/R5RS/HTML)
 
 Todo list:
@@ -59,7 +56,9 @@ Todo list:
 + add vector support **[DONE]**
 + rewrite environment using rbtree(variable lookup is too slow) **[DONE] ~2x speedup**
 + call/cc **[DONE]**
-+ macro support
++ macro support **[DONE]**
++ command line options
++ make install
 
 Thanks for *Peter Michaux's* excellent 
 [introduction series.](http://peter.michaux.ca/articles/scheme-from-scratch-introduction)

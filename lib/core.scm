@@ -6,9 +6,10 @@
 ;
 
 
-(define *DATA_TOP* "/usr/share/asc/")
-(define (reload-core)
-  (load (string-append *DATA_TOP* "lib/core.scm")))
+(define *DATA-TOP* "/usr/share/asc/")
+
+(define (load-lib lib)
+  (load (string-append *DATA-TOP* "lib/" lib ".scm")))
 
 ; number functions
 (define (number? x)

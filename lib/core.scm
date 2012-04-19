@@ -543,3 +543,12 @@
 (define (force promise)
   (promise))
 
+; let*
+(define-macro let*
+   (lambda (bindings . body)
+     (cond
+       ((null? (cdr bindings))
+        `(let ,bindings ,@body))
+       (else
+        `(let ,(list (car bindings)) (let* ,(cdr bindings) ,@body))))))
+

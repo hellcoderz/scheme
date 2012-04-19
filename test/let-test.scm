@@ -1,0 +1,6 @@
+(let* ((x 7)
+       (y (+ x 1))
+       (z (* x y)))
+  (display-line x)
+  (display-line y)
+  (display-line z))

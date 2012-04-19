@@ -30,8 +30,8 @@ character, pair, vector
 
 Install:
 ---------
-`make`
-`sudo make install`
+`make`  
+`sudo make install`  
 `asc`
 
 Documentation:

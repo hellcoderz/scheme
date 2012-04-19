@@ -30,9 +30,14 @@ character, pair, vector
 
 Install:
 ---------
-`make`  
-`sudo make install`  
-`asc`
+`$ make`  
+`$ sudo make install`  
+`$ asc`  
+
+Uninstall:
+-----------
+`$ make uninstall`
+
 
 Documentation:
 --------------

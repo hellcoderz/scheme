@@ -38,7 +38,6 @@ Uninstall:
 -----------
 `$ make uninstall`
 
-
 Documentation:
 --------------
 If you already know Scheme, just start typing code in the REPL. 
@@ -70,6 +69,7 @@ Todo list:
 + macro support **[DONE]**
 + command line options **[DONE]**
 + make install **[DONE]**
++ add case, do
 
 Thanks for *Peter Michaux's* excellent 
 [introduction series.](http://peter.michaux.ca/articles/scheme-from-scratch-introduction)

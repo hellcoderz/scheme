@@ -3,7 +3,7 @@
 
 #include "object.h"
 
-int sc_repl(void);
+int sc_repl(char *file);
 void repl_exit(void);
 object* get_repl_env(void);
 

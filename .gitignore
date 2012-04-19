@@ -1,6 +1,4 @@
 *.o
-scheme
+asc
 gmon.out
-test/test
-test/*.o
 *.html

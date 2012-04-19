@@ -28,6 +28,12 @@ character, pair, vector
 + macro(define-macro)
 + promise(delay, force)
 
+Install:
+---------
+`make`
+`sudo make install`
+`asc`
+
 Documentation:
 --------------
 If you already know Scheme, just start typing code in the REPL. 
@@ -57,8 +63,8 @@ Todo list:
 + rewrite environment using rbtree(variable lookup is too slow) **[DONE] ~2x speedup**
 + call/cc **[DONE]**
 + macro support **[DONE]**
-+ command line options
-+ make install
++ command line options **[DONE]**
++ make install **[DONE]**
 
 Thanks for *Peter Michaux's* excellent 
 [introduction series.](http://peter.michaux.ca/articles/scheme-from-scratch-introduction)

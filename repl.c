@@ -8,11 +8,12 @@
 #include "env.h"
 #include "gc.h"
 
+#define CORE_LIB_PATH APP_DIR "lib/core.scm"
+
 static int keep_run = 1;
 static object *global_env;
 
-static int load_core_lib(void) {
-    char filename[] = "./lib/core.scm";
+static int load_src(char *filename) {
     FILE *in;
     object *exp;
 
@@ -42,6 +43,10 @@ static int load_core_lib(void) {
     return 0;
 }
 
+static int load_core_lib() {
+    return load_src(CORE_LIB_PATH);
+}
+
 static int init(void) {
     global_env = make_base_env();
     if (global_env == NULL) {
@@ -56,7 +61,7 @@ static int init(void) {
     return 0;
 }
 
-int sc_repl(void) {
+int sc_repl(char *run_file) {
     object *exp, *val;
     int ret = 0;
     int err_cnt = 0;
@@ -66,6 +71,16 @@ int sc_repl(void) {
         return -1;
     }
 
+    /* execute program */
+    if (run_file) {
+        int ret = load_src(run_file);
+        if (ret != 0) {
+            fprintf(stderr, "failed to load %s\n", run_file);
+        }
+        return ret;
+    }
+
+    /* inteactive mode */
     in = stdin;
     out = stdout;
     printf("%s", WELCOME_STR);

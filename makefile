@@ -20,12 +20,33 @@ ifeq ($(PROFILE), 1)
 	LFLAG += -pg
 endif
 
-scheme: $(OBJS)
-	cc $^ $(LFLAG) -o scheme
+asc: $(OBJS)
+	cc $^ $(LFLAG) -o asc
 
 %.o: %.c
 	cc $(CFLAG) $< -o $@
 
+INSTALL_BIN = /usr/bin
+INSTALL_TOP = /usr/share/asc
+INSTALL_LIB = $(INSTALL_TOP)/lib
+MKDIR = mkdir -p
+INSTALL = install -p
+INSTALL_EXEC = $(INSTALL) -m 0755
+INSTALL_DATA = $(INSTALL) -m 0644
+UNINSTALL = rm -f
+UNINSTALL_DIR = $(UNINSTALL) -r
+BIN = asc
+LIB = lib/core.scm
+install:
+	$(MKDIR) $(INSTALL_BIN) $(INSTALL_LIB)
+	$(INSTALL) $(BIN) $(INSTALL_BIN)
+	$(INSTALL) $(LIB) $(INSTALL_LIB)
+
+uninstall:
+	cd $(INSTALL_BIN) && $(UNINSTALL) $(BIN)
+	$(UNINSTALL_DIR) $(INSTALL_TOP)
+
+RM = rm -f
 .PHONY: clean
 clean:
-	rm *.o scheme
+	$(RM) *.o asc

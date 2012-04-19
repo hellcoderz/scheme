@@ -70,7 +70,11 @@ int main(int argc, char **argv) {
         return ret;
     }
 
-    ret = sc_repl();
+    if (argc == 2) {
+        ret = sc_repl(argv[1]);
+    } else {
+        ret = sc_repl(NULL);
+    }
 
     dispose();
 

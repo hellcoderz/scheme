@@ -39,5 +39,8 @@
 /* enable rb-tree verification after each insertion */
 /* #define VERIFY_RB_TREE */
 
+/* application fold */
+#define APP_DIR "/usr/share/asc/"
+
 #endif
 

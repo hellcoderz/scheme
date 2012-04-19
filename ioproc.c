@@ -257,7 +257,7 @@ static int open_output_port_proc(object *params, object **result) {
         return SC_E_ARG_TYPE;
     }
     filename = obj_sv(obj);
-    out = fopen(filename, "a");
+    out = fopen(filename, "w");
     if (out == NULL) {
         return SC_E_IO_OPEN;
     }

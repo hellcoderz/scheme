@@ -552,3 +552,10 @@
        (else
         `(let ,(list (car bindings)) (let* ,(cdr bindings) ,@body))))))
 
+; letrec
+(define-macro letrec
+   (lambda (bindings . body)
+     `(let ,(map (lambda (b) (list (car b) ''*undefined*)) bindings)
+        ,@(map (lambda (b) (cons 'set! b)) bindings)
+        ,@body)))
+

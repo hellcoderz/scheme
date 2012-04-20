@@ -69,7 +69,9 @@ Todo list:
 + macro support **[DONE]**
 + command line options **[DONE]**
 + make install **[DONE]**
-+ add case, do
++ add case, do **[DONE]**
++ prettify quote output
++ stream support
 
 Thanks for *Peter Michaux's* excellent 
 [introduction series.](http://peter.michaux.ca/articles/scheme-from-scratch-introduction)

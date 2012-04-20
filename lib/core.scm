@@ -5,7 +5,73 @@
 ; 2012-2-16, initial version
 ;
 
+; delay evaluation
+(define (make-promise proc)
+  (let ((result-ready? #f)
+        (result #f))
+    (lambda ()
+      (if result-ready?
+        result
+        (let ((x (proc)))
+          (if result-ready?
+            result
+            (begin (set! result-ready? #t)
+                   (set! result x)
+                   result)))))))
 
+(define-macro delay
+   (lambda (exp)
+     `(make-promise (lambda () ,exp))))
+
+(define (force promise)
+  (promise))
+
+; let*
+(define-macro let*
+   (lambda (bindings . body)
+     (cond
+       ((null? (cdr bindings))
+        `(let ,bindings ,@body))
+       (else
+        `(let ,(list (car bindings)) (let* ,(cdr bindings) ,@body))))))
+
+; letrec
+(define-macro letrec
+   (lambda (bindings . body)
+     `(let ,(map (lambda (b) (list (car b) ''*undefined*)) bindings)
+        ,@(map (lambda (b) (cons 'set! b)) bindings)
+        ,@body)))
+
+; case
+(define-macro case
+   (lambda (key . clauses)
+     (let ((val (gensym)))
+       `(let ((,val ,key))
+            (cond
+              ,@(map (lambda (c)
+                       (cond
+                         ((eq? (car c) 'else) c)
+                         (else `((memv ,val ',(car c)) ,(cadr c)))))
+                     clauses))))))
+
+; do
+(define-macro do
+   (lambda (exps test . cmd)
+     (let ((loop-proc (gensym "proc")))
+         `(begin
+            (define (,loop-proc ,@(map car exps))
+                (cond
+                  (,(car test) ,@(cdr test))
+                  (else ,@cmd
+                        (,loop-proc
+                          ,@(map (lambda (e)
+                                   (cond
+                                     ((null? (list-tail e 2)) (car e))
+                                     (else (caddr e))))
+                                   exps)))))
+             (,loop-proc ,@(map cadr exps))))))
+
+; library helpers
 (define *DATA-TOP* "/usr/share/asc/")
 
 (define (load-lib lib)
@@ -370,11 +436,13 @@
     (else (find-tail pred (cdr seq)))))
 
 (define (member-procedure pred)
-  (lambda (obj seq)
-    (cond
-      ((null? seq) #f)
-      ((pred obj (car seq)) seq)
-      (else (maker obj (cdr seq))))))
+  (define loop
+      (lambda (obj seq)
+        (cond
+          ((null? seq) #f)
+          ((pred obj (car seq)) seq)
+          (else (loop obj (cdr seq))))))
+  loop)
 
 (define memq (member-procedure eq?))
 
@@ -521,41 +589,4 @@
 
 (define (current-continuation)
   (call/cc (lambda (cc) (cc cc))))
-
-; delay evaluation
-(define (make-promise proc)
-  (let ((result-ready? #f)
-        (result #f))
-    (lambda ()
-      (if result-ready?
-        result
-        (let ((x (proc)))
-          (if result-ready?
-            result
-            (begin (set! result-ready? #t)
-                   (set! result x)
-                   result)))))))
-
-(define-macro delay
-   (lambda (exp)
-     `(make-promise (lambda () ,exp))))
-
-(define (force promise)
-  (promise))
-
-; let*
-(define-macro let*
-   (lambda (bindings . body)
-     (cond
-       ((null? (cdr bindings))
-        `(let ,bindings ,@body))
-       (else
-        `(let ,(list (car bindings)) (let* ,(cdr bindings) ,@body))))))
-
-; letrec
-(define-macro letrec
-   (lambda (bindings . body)
-     `(let ,(map (lambda (b) (list (car b) ''*undefined*)) bindings)
-        ,@(map (lambda (b) (cons 'set! b)) bindings)
-        ,@body)))
 

@@ -96,12 +96,22 @@ static object* eval_quasiquote_rec(object *exp, object *env, int level, int outm
             gc_protect(car_obj);
             cdr_obj = eval_quasiquote_rec(cdr(exp), env, level, outmost);
             gc_abandon();
-            if (is_empty_list(car_obj)) {
-                return cdr_obj;
+            if (unquote_level == 0) { /* do splicing */
+                if (is_empty_list(car_obj)) {
+                    return cdr_obj;
+                } else {
+                    object *last = get_last_pair(car_obj);
+                    set_cdr(last, cdr_obj);
+                    return car_obj;
+                }
             } else {
-                object *last = get_last_pair(car_obj);
-                set_cdr(last, cdr_obj);
-                return car_obj;
+                object *result;
+                gc_protect(car_obj);
+                gc_protect(cdr_obj);
+                result = cons(car_obj, cdr_obj);
+                gc_abandon();
+                gc_abandon();
+                return result;
             }
         } else if (is_quasiquote(obj)) {
             car_obj = eval_quasiquote_rec(obj, env, level+1, 0);

@@ -3,6 +3,7 @@
 #include "object.h"
 #include "write.h"
 #include "log.h"
+#include "sform.h"
 
 static int write_character(FILE *out, object *val) {
     char v = obj_cv(val);
@@ -117,6 +118,45 @@ int write_vector(FILE *out, object *obj) {
     return 0;
 }
 
+static int is_quote(object *val) {
+    return car(val) == get_quote_symbol();
+}
+
+static int is_quasiquote(object *val) {
+    return car(val) == get_quasiquote_symbol();
+}
+
+static int is_unquote(object *val) {
+    return car(val) == get_unquote_symbol();
+}
+
+static int is_unquotesplicing(object *val) {
+    return car(val) == get_unquotesplicing_symbol();
+}
+
+static object* handle_quote(FILE *out, object *val) {
+    object *ret = val;
+    /* successive quotes needs a loop to remove them all */
+    for (;;) {
+        if (is_quote(ret)) {
+            ret = cadr(ret);
+            fprintf(out, "'");
+        } else if (is_quasiquote(ret)) {
+            ret = cadr(ret);
+            fprintf(out, "`");
+        } else if (is_unquote(ret)) {
+            ret = cadr(ret);
+            fprintf(out, ",");
+        } else if (is_unquotesplicing(ret)) {
+            ret = cadr(ret);
+            fprintf(out, ",@");
+        } else {
+            break;
+        }
+    }
+    return ret;
+}
+
 int sc_write(FILE *out, object *val) {
     int ret = 0;
 
@@ -139,9 +179,14 @@ int sc_write(FILE *out, object *val) {
     } else if (is_empty_list(val)) {
         fprintf(out, "%s", "()");
     } else if (is_pair(val)) {
-        fprintf(out, "(");
-        ret = write_pair(out, val);
-        fprintf(out, ")");
+        val = handle_quote(out, val);
+        if (is_pair(val)) {
+            fprintf(out, "(");
+            ret = write_pair(out, val);
+            fprintf(out, ")");
+        } else {
+            sc_write(out, val);
+        }
     } else if (is_vector(val)) {
         fprintf(out, "#(");
         ret = write_vector(out, val);

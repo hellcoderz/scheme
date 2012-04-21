@@ -30,13 +30,10 @@ character, pair, vector
 
 Install:
 ---------
-`$ make`  
-`$ sudo make install`  
-`$ asc`  
-
-Uninstall:
------------
-`$ make uninstall`
+`$ make  
+$ sudo make install  
+$ asc`  
+If you don't like it, `$ sudo make uninstall`
 
 Documentation:
 --------------
@@ -70,7 +67,7 @@ Todo list:
 + command line options **[DONE]**
 + make install **[DONE]**
 + add case, do **[DONE]**
-+ prettify quote output
++ prettify quote output **[DONE]**
 + stream support
 
 Thanks for *Peter Michaux's* excellent 

@@ -1,5 +1,5 @@
 OBJS = eval.o  mem.o reader.o fixnum.o charcache.o \
-	write.o main.o repl.o init_obj.o flonum.o \
+	write.o main.o repl.o initobj.o flonum.o \
 	boolean.o character.o sstream.o string.o \
 	list.o symbol.o hashtbl.o sform.o env.o \
 	primitive.o procdef.o compound.o eof.o \

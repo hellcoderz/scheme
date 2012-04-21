@@ -41,6 +41,9 @@ If you already know Scheme, just start typing code in the REPL.
 Or you can read the R5RS.
 [here](http://www.schemers.org/Documents/Standards/R5RS/HTML)
 
+Thanks for *Peter Michaux's* excellent 
+[introduction series.](http://peter.michaux.ca/articles/scheme-from-scratch-introduction)
+
 Todo list:
 ---------------
 + rename files, remove "sc" prefix **[DONE]**
@@ -69,7 +72,3 @@ Todo list:
 + add case, do **[DONE]**
 + prettify quote output **[DONE]**
 + stream support
-
-Thanks for *Peter Michaux's* excellent 
-[introduction series.](http://peter.michaux.ca/articles/scheme-from-scratch-introduction)
-

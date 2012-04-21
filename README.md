@@ -11,7 +11,7 @@ expressive programming language." -- Sussman and Steele*
 Writing a Scheme interpreter is easy, and more importantly,
 it is fun.
 
-Features currently included:
+Features:
 -----------------
 + lambda, of course
 + integer(32 bit), floating-point numbers, string, symbol, boolean,
@@ -30,9 +30,9 @@ character, pair, vector
 
 Install:
 ---------
-`$ make  
-$ sudo make install  
-$ asc`  
+`$ make`   
+`$ sudo make install`   
+`$ asc`  
 If you don't like it, `$ sudo make uninstall`
 
 Documentation:

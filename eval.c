@@ -790,8 +790,8 @@ static object* expand_macro(object *raw_exp, object *macro, object *args) {
     tenv = extend_env(obj_lvp(op),
                      params,
                      obj_lve(op));
-    texp = make_begin(obj_lvb(op));
     gc_protect(tenv);
+    texp = make_begin(obj_lvb(op));
     gc_protect(texp);
     exp = sc_eval(texp, tenv); 
     gc_abandon();

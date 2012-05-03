@@ -9,11 +9,13 @@
 #include "mem.h"
 #include "sform.h"
 #include "cont.h"
+#include "queue.h"
 
 static gc_heap heap;
 static gc_list free_list, active_list;
 static int heap_empty = 0;
 static stack *stack_root;
+static queue *obj_stack;
 
 #define ACTIVE  1
 #define FREE    0
@@ -286,67 +288,64 @@ static void gc_free(object *obj) {
 }
 
 /* garbage collection functions */
-static void mark_object(object *obj);
 static void frame_marker(object *var, object *val) {
-    mark_object(var);
-    mark_object(val);
+    enqueue(obj_stack, var);
+    enqueue(obj_stack, val);
 }
 
 static void mark_object(object *obj) {
-tailcall:
-    if (obj == NULL) {
-        return;
-    }
-    
-    /* skip marked objects, environments will recur */
-    if (is_active(obj)) {
-        return;
-    }
-
-    mark_active(obj);
-
-    if (is_pair(obj)) {
-        object *car_obj, *cdr_obj;
-        car_obj = car(obj);
-        cdr_obj = cdr(obj);
-        mark_object(car_obj);
-        obj = cdr_obj;
-        goto tailcall;
-    }
-    if (is_compound_proc(obj)) {
-        object *params = obj_lvp(obj);
-        object *body = obj_lvb(obj);
-        object *env = obj_lve(obj);
-        mark_object(params);
-        mark_object(body);
-        obj = env;
-        goto tailcall;
-    }
-    if (is_env_frame(obj)) {
-        env_frame_walk(obj, frame_marker);
-    }
-    if (is_vector(obj)) {
-        int i, len;
-        object **array;
-        len = obj_vsv(obj);
-        array = obj_vav(obj);
-        for (i = 0; i < len; i++) {
-            mark_object(array[i]);
+    do {
+        if (obj == NULL) {
+            continue;
         }
-    }
-    if (is_cont(obj)) {
-       struct cont *c = obj_cont(obj);
-       object **objs = c->capture;
-       int n = c->gc_root_stack.size;
-       int i = 0;
-       for (; i < n; i++) {
-           mark_object(objs[i]);
-       }
-    }
-    if (is_macro(obj)) {
-        obj = obj_mv(obj);
-        goto tailcall;
-    }
+        
+        /* skip marked objects, environments will recur */
+        if (is_active(obj)) {
+            continue;
+        }
+
+        mark_active(obj);
+
+        if (is_pair(obj)) {
+            object *car_obj, *cdr_obj;
+            car_obj = car(obj);
+            cdr_obj = cdr(obj);
+            enqueue(obj_stack, car_obj);
+            enqueue(obj_stack, cdr_obj);
+        }
+        if (is_compound_proc(obj)) {
+            object *params = obj_lvp(obj);
+            object *body = obj_lvb(obj);
+            object *env = obj_lve(obj);
+            enqueue(obj_stack, params);
+            enqueue(obj_stack, body);
+            enqueue(obj_stack, env);
+        }
+        if (is_env_frame(obj)) {
+            env_frame_walk(obj, frame_marker);
+        }
+        if (is_vector(obj)) {
+            int i, len;
+            object **array;
+            len = obj_vsv(obj);
+            array = obj_vav(obj);
+            for (i = 0; i < len; i++) {
+                enqueue(obj_stack, array[i]);
+            }
+        }
+        if (is_cont(obj)) {
+           struct cont *c = obj_cont(obj);
+           object **objs = c->capture;
+           int n = c->gc_root_stack.size;
+           int i = 0;
+           for (; i < n; i++) {
+               enqueue(obj_stack, objs[i]);
+           }
+        }
+        if (is_macro(obj)) {
+            enqueue(obj_stack, obj_mv(obj));
+        }
+   } while ((obj = dequeue(obj_stack)) != NULL);
 }
 
 static void mark_stack_root(stack_elem elem) {
@@ -447,12 +446,14 @@ int gc_init(int heap_size) {
     extend_freelist();
 
     stack_root = stack_new();
+    obj_stack = queue_new();
 
     return 0;
 }
 
 void gc_finalize(void) {
     stack_dispose(stack_root);
+    queue_dispose(obj_stack);
     sc_free(heap.segments);
     heap.segments = NULL;
 }

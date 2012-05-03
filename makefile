@@ -5,7 +5,7 @@ OBJS = eval.o  mem.o reader.o fixnum.o charcache.o \
 	primitive.o procdef.o compound.o eof.o \
 	port.o ioproc.o gc.o stack.o intcache.o \
 	mathproc.o strproc.o objstream.o vector.o \
-	vecproc.o frame.o cont.o macro.o
+	vecproc.o frame.o cont.o macro.o queue.o
 
 CFLAG = -Wall -c
 LFLAG = -lm -lrt
@@ -36,7 +36,7 @@ INSTALL_DATA = $(INSTALL) -m 0644
 UNINSTALL = rm -f
 UNINSTALL_DIR = $(UNINSTALL) -r
 BIN = asc
-LIB = lib/core.scm
+LIB = lib/core.scm lib/stream.scm
 install:
 	$(MKDIR) $(INSTALL_BIN) $(INSTALL_LIB)
 	$(INSTALL) $(BIN) $(INSTALL_BIN)

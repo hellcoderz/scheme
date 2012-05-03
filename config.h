@@ -21,11 +21,11 @@
 #define INT_CACHE_LOW -128
 
 
-/* 1024 objects in a segment */
+/* objects in a segment */
 #define SEGMENT_SIZE    1024 * 128
 
 /* default number of segments in heap */
-#define DEFAULT_HEAP_SIZE   8
+#define DEFAULT_HEAP_SIZE   128
 
 /* extend free_list if availale objects is less than this */
 #define EXTEND_THRESHOLD    1024 * 32
@@ -34,7 +34,7 @@
 #define GC_THRESHOLD    1024 * 5 
 
 /* enable gc debugging info */
-/* #define GC_DEBUG_INFO */
+/*  #define GC_DEBUG_INFO */
 
 /* enable rb-tree verification after each insertion */
 /* #define VERIFY_RB_TREE */
